@@ -1,8 +1,9 @@
-import { lazy, Suspense, useCallback, useEffect, useMemo, useState } from 'react';
+import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { usePages } from '../hooks/usePages.js';
 import { goHome, goToPage, useHashRoute } from '../hooks/useHashRoute.js';
 import { buildTree, pathOf, UNTITLED } from '../data/tree.js';
 import { createPage, trashPage } from '../data/pages.js';
+import { ensureOnboarding } from '../data/onboarding.js';
 import { loadJSON, saveJSON } from '../lib/storage.js';
 import { MenuIcon, MoreIcon, PlusIcon, SearchIcon, TrashIcon } from './icons.jsx';
 import Menu from './Menu.jsx';
@@ -66,6 +67,16 @@ export default function Workspace({ user }) {
     const target = (last && tree.byId.get(last)) || tree.roots[0];
     if (target) goToPage(target.id, { replace: true });
   }, [route.view, loaded, tree, lastKey]);
+
+  // Tài khoản mới: tạo trang "Bắt đầu" (kiểm tra một lần mỗi phiên, sau khi đã có danh sách trang)
+  const onboardingChecked = useRef(false);
+  useEffect(() => {
+    if (!loaded || onboardingChecked.current) return;
+    onboardingChecked.current = true;
+    ensureOnboarding(uid, pages).then((id) => {
+      if (id && window.location.hash.replace(/^#\/?/, '') === '') goToPage(id, { replace: true });
+    });
+  }, [loaded, uid, pages]);
 
   const ctx = useMemo(
     () => ({
