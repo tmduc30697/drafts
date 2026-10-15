@@ -5,6 +5,7 @@ import { markdown, insertNewlineContinueMarkupCommand, deleteMarkupBackward } fr
 import { languages } from '@codemirror/language-data';
 import { tags as t } from '@lezer/highlight';
 import { codeBlocks } from './codeBlocks.js';
+import { mermaidBlocks } from './mermaidBlocks.js';
 import { slashMenu } from './slashMenu.js';
 import { renumberLists } from './renumberLists.js';
 
@@ -38,6 +39,7 @@ export function editorExtensions({ onDocChange }) {
     markdown({ codeLanguages: languages, addKeymap: false }),
     syntaxHighlighting(codeHighlight),
     codeBlocks,
+    mermaidBlocks,
     renumberLists,
     slashMenu,
     listKeymap,

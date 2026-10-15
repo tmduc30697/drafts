@@ -1,6 +1,8 @@
 import { autocompletion } from '@codemirror/autocomplete';
 import { inCodeBlock } from './codeBlocks.js';
-import { CodeIcon } from './editorIcons.js';
+import { CodeIcon, DiagramIcon } from './editorIcons.js';
+import { openMermaidDialog } from './mermaidDialog.js';
+import { insertMermaidBlock } from './mermaidBlocks.js';
 
 // Thay "/lệnh" bằng một khối code trống (Plain text) và đặt con trỏ vào bên trong.
 // Ngôn ngữ đổi sau bằng dropdown trên thanh tiêu đề của khối.
@@ -19,7 +21,7 @@ function insertCodeBlock(view, from, to) {
   });
 }
 
-// Các lựa chọn trong menu "/" (hiện chỉ có khối code)
+// Các lựa chọn trong menu "/"
 const COMMANDS = [
   {
     label: '/code',
@@ -27,6 +29,20 @@ const COMMANDS = [
     detail: 'Khối code có tô màu cú pháp',
     icon: CodeIcon,
     apply: (view, _completion, from, to) => insertCodeBlock(view, from, to),
+  },
+  {
+    label: '/mermaid',
+    displayLabel: 'Mermaid',
+    detail: 'Sơ đồ từ code Mermaid',
+    icon: DiagramIcon,
+    // Xóa "/lệnh" rồi mở popup dán code; bấm Chèn thì thêm khối sơ đồ vào đúng chỗ đó
+    apply: (view, _completion, from, to) => {
+      view.dispatch({ changes: { from, to }, selection: { anchor: from } });
+      openMermaidDialog({
+        onSubmit: (code) => insertMermaidBlock(view, from, code),
+        onClose: () => view.focus(),
+      });
+    },
   },
 ];
 

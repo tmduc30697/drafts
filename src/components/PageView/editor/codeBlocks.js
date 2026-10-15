@@ -164,6 +164,8 @@ function buildDecorations(view) {
         const lastLine = doc.lineAt(node.to);
         const open = FENCE_OPEN.exec(first.text);
         const closed = lastLine.number > first.number && FENCE_CLOSE.test(lastLine.text);
+        // Khối mermaid đã đóng được vẽ thành sơ đồ (mermaidBlocks.js), không trang trí ở đây
+        if (closed && open && open[3].toLowerCase() === 'mermaid') return false;
 
         // Nền + font cho mọi dòng của khối
         for (let n = first.number; n <= lastLine.number; n++) {

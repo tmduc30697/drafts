@@ -138,6 +138,16 @@ textarea {
   cursor: default;
 }
 
+.btn-primary {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #fff;
+}
+
+.btn-primary:hover {
+  background: color-mix(in srgb, var(--accent) 88%, #000);
+}
+
 .btn-danger {
   color: var(--danger);
 }
