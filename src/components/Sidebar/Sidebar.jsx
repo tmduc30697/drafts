@@ -4,6 +4,7 @@ import { auth } from '../../firebase.js';
 import { LogoutIcon, PlusIcon, SearchIcon, TrashIcon } from '../icons.jsx';
 import Menu from '../Menu.jsx';
 import PageTree from './PageTree.jsx';
+import { TreeDnd } from './TreeDnd.jsx';
 
 const isMac = /Mac|iPhone|iPad/.test(navigator.platform);
 
@@ -41,7 +42,9 @@ export default function Sidebar({ user, tree, ctx, route, onOpenSearch, onNaviga
 
       <div className="sidebar-section">Trang</div>
       <div className="sidebar-tree">
-        <PageTree tree={tree} ctx={ctx} />
+        <TreeDnd uid={user.uid} tree={tree} ctx={ctx}>
+          <PageTree tree={tree} ctx={ctx} />
+        </TreeDnd>
         {tree.roots.length === 0 && <div className="tree-empty">Chưa có trang nào</div>}
       </div>
 

@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { ChevronIcon, DocIcon, MoreIcon, PlusIcon, TrashIcon } from '../icons.jsx';
 import Menu from '../Menu.jsx';
+import { useTreeRowDnd } from './TreeDnd.jsx';
 import { UNTITLED } from '../../data/tree.js';
 
 // Cây trang lồng nhau trong sidebar
@@ -34,10 +35,21 @@ export function TreeRow({ page, depth, expanded, hasChildren, ctx }) {
   const [menuAnchor, setMenuAnchor] = useState(null);
   const active = ctx.currentId === page.id;
   const title = ctx.titleOf(page);
+  const dnd = useTreeRowDnd(page.id);
 
   return (
     <div
-      className={`tree-row ${active ? 'active' : ''} ${menuAnchor ? 'menu-open' : ''}`}
+      ref={dnd.setRef}
+      {...dnd.dragProps}
+      className={[
+        'tree-row',
+        active && 'active',
+        menuAnchor && 'menu-open',
+        dnd.isDragging && 'dragging',
+        dnd.dropPos && `drop-${dnd.dropPos}`,
+      ]
+        .filter(Boolean)
+        .join(' ')}
       style={{ paddingLeft: 8 + depth * 16 }}
     >
       <button
@@ -48,7 +60,7 @@ export function TreeRow({ page, depth, expanded, hasChildren, ctx }) {
       >
         <ChevronIcon size={14} className={expanded ? 'rot90' : ''} />
       </button>
-      <a className="tree-link" href={`#/p/${page.id}`} onClick={ctx.onNavigate}>
+      <a className="tree-link" href={`#/p/${page.id}`} onClick={ctx.onNavigate} draggable={false}>
         <span className="tree-icon">{page.icon || <DocIcon size={16} />}</span>
         <span className={`tree-title ${title ? '' : 'untitled'}`}>{title || UNTITLED}</span>
       </a>

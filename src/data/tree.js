@@ -23,6 +23,11 @@ export function buildTree(pages) {
     byId,
     roots: children.get(ROOT) || [],
     childrenOf: (id) => children.get(id ?? ROOT) || [],
+    // Cha thực tế trong cây (null nếu là trang gốc)
+    parentOf: (id) => {
+      const p = byId.get(id);
+      return p?.parentId && ids.has(p.parentId) ? p.parentId : null;
+    },
   };
 }
 
@@ -63,6 +68,50 @@ export function orderBetween(before, after) {
   if (before == null) return after - 1;
   if (after == null) return before + 1;
   return (before + after) / 2;
+}
+
+// id có phải là chính ancestorId hoặc con cháu của nó không (dùng để chặn kéo trang vào trong chính nó)
+export function isSelfOrDescendant(tree, ancestorId, id) {
+  for (let cur = id; cur; cur = tree.parentOf(cur)) {
+    if (cur === ancestorId) return true;
+  }
+  return false;
+}
+
+// Tính kết quả khi thả trang `activeId` vào trang `targetId`:
+// pos = 'before' | 'after' | 'inside'. Trả về { parentId, orders: [{ id, order }] } hoặc null nếu không hợp lệ.
+export function computeMove(tree, activeId, targetId, pos, isExpanded) {
+  if (isSelfOrDescendant(tree, activeId, targetId)) return null;
+
+  let parentId;
+  let index; // vị trí chèn trong danh sách anh em (đã bỏ trang đang kéo)
+  const targetChildren = tree.childrenOf(targetId).filter((p) => p.id !== activeId);
+
+  if (pos === 'inside') {
+    parentId = targetId;
+    index = targetChildren.length;
+  } else if (pos === 'after' && isExpanded(targetId) && targetChildren.length) {
+    // Thả ngay dưới một trang đang mở rộng = thành trang con đầu tiên của nó
+    parentId = targetId;
+    index = 0;
+  } else {
+    parentId = tree.parentOf(targetId);
+    const siblings = tree.childrenOf(parentId).filter((p) => p.id !== activeId);
+    index = siblings.findIndex((p) => p.id === targetId) + (pos === 'after' ? 1 : 0);
+  }
+
+  const siblings = tree.childrenOf(parentId).filter((p) => p.id !== activeId);
+  const prev = siblings[index - 1];
+  const next = siblings[index];
+  const order = orderBetween(prev?.order, next?.order);
+
+  // Khoảng cách giữa hai order quá sát (chia đôi nhiều lần) hoặc trùng nhau: đánh số lại cả nhóm
+  const tooClose = (a, b) => a != null && b != null && Math.abs(a - b) < 1e-9;
+  if (tooClose(prev?.order, order) || tooClose(order, next?.order)) {
+    const ordered = [...siblings.slice(0, index).map((p) => p.id), activeId, ...siblings.slice(index).map((p) => p.id)];
+    return { parentId, orders: ordered.map((id, i) => ({ id, order: i + 1 })) };
+  }
+  return { parentId, orders: [{ id: activeId, order }] };
 }
 
 // Bỏ dấu tiếng Việt + chữ thường để tìm kiếm không phân biệt dấu

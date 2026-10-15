@@ -74,6 +74,7 @@ export default function Workspace({ user }) {
           s.has(id) ? s.delete(id) : s.add(id);
           return s;
         }),
+      expand: (id) => updateExpanded((s) => s.add(id)),
       onCreate: (parentId) => {
         const id = createPage(uid, pages, { parentId });
         if (parentId) updateExpanded((s) => s.add(parentId));
