@@ -7,6 +7,7 @@ import { loadJSON, saveJSON } from '../lib/storage.js';
 import { MenuIcon, MoreIcon, PlusIcon, TrashIcon } from './icons.jsx';
 import Menu from './Menu.jsx';
 import Sidebar from './Sidebar/Sidebar.jsx';
+import TrashView from './TrashView.jsx';
 
 // BlockNote khá nặng: tách thành chunk riêng để màn hình đăng nhập và sidebar hiện nhanh
 const PageView = lazy(() => import('./PageView/PageView.jsx'));
@@ -126,6 +127,8 @@ export default function Workspace({ user }) {
             <Suspense fallback={null}>
               <PageView key={currentPage.id} uid={uid} page={currentPage} onLiveTitle={setLiveTitle} />
             </Suspense>
+          ) : route.view === 'trash' ? (
+            <TrashView uid={uid} pages={pages} />
           ) : route.view === 'page' ? (
             <div className="center-screen muted">Trang không tồn tại hoặc đã ở trong thùng rác.</div>
           ) : route.view === 'home' && tree.roots.length === 0 ? (
