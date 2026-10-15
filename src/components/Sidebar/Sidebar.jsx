@@ -3,12 +3,12 @@ import { signOut } from 'firebase/auth';
 import { auth } from '../../firebase.js';
 import { LogoutIcon, PlusIcon, SearchIcon, TrashIcon } from '../icons.jsx';
 import Menu from '../Menu.jsx';
-import PageTree from './PageTree.jsx';
-import { TreeDnd } from './TreeDnd.jsx';
+import PageList from './PageList.jsx';
+import { ListDnd } from './ListDnd.jsx';
 
 const isMac = /Mac|iPhone|iPad/.test(navigator.platform);
 
-export default function Sidebar({ user, tree, ctx, route, onOpenSearch, onNavigate }) {
+export default function Sidebar({ user, list, ctx, route, onOpenSearch, onNavigate }) {
   const [userMenu, setUserMenu] = useState(null);
 
   return (
@@ -35,17 +35,15 @@ export default function Sidebar({ user, tree, ctx, route, onOpenSearch, onNaviga
         <span>Tìm kiếm</span>
         <kbd className="sidebar-kbd">{isMac ? '⌘K' : 'Ctrl K'}</kbd>
       </button>
-      <button className="sidebar-item" onClick={() => ctx.onCreate(null)}>
-        <PlusIcon size={16} />
-        <span>Trang mới</span>
-      </button>
-
       <div className="sidebar-section">Trang</div>
       <div className="sidebar-tree">
-        <TreeDnd uid={user.uid} tree={tree} ctx={ctx}>
-          <PageTree tree={tree} ctx={ctx} />
-        </TreeDnd>
-        {tree.roots.length === 0 && <div className="tree-empty">Chưa có trang nào</div>}
+        <ListDnd uid={user.uid} list={list} titleOf={ctx.titleOf}>
+          <PageList list={list} ctx={ctx} />
+        </ListDnd>
+        <button className="sidebar-item" onClick={ctx.onCreate}>
+          <PlusIcon size={16} />
+          <span>Trang mới</span>
+        </button>
       </div>
 
       <a

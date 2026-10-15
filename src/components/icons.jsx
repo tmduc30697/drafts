@@ -18,11 +18,6 @@ function Svg({ size = 18, children, ...rest }) {
   );
 }
 
-export const ChevronIcon = (p) => (
-  <Svg {...p}>
-    <path d="M9 6l6 6-6 6" />
-  </Svg>
-);
 export const PlusIcon = (p) => (
   <Svg {...p}>
     <path d="M12 5v14M5 12h14" />

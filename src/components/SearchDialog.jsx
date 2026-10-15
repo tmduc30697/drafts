@@ -1,26 +1,26 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { goToPage } from '../hooks/useHashRoute.js';
-import { normalizeText, pathOf, UNTITLED } from '../data/tree.js';
+import { normalizeText, UNTITLED } from '../data/tree.js';
 import { DocIcon, SearchIcon } from './icons.jsx';
 
 const MAX_RESULTS = 50;
 
 // Hộp tìm trang theo tiêu đề, chạy hoàn toàn trên dữ liệu đã có trong máy (không tốn lượt đọc)
-export default function SearchDialog({ tree, titleOf, onClose }) {
+export default function SearchDialog({ list, titleOf, onClose }) {
   const [query, setQuery] = useState('');
   const [selected, setSelected] = useState(0);
   const listRef = useRef(null);
 
   const results = useMemo(() => {
     const q = normalizeText(query.trim());
-    const all = [...tree.byId.values()];
+    const all = [...list];
     const matched = q
       ? all.filter((p) => normalizeText(titleOf(p)).includes(q))
       : // Chưa gõ gì: hiện các trang sửa gần đây
         all.sort((a, b) => b.updatedAt - a.updatedAt);
     return matched.slice(0, MAX_RESULTS);
-  }, [query, tree, titleOf]);
+  }, [query, list, titleOf]);
 
   useEffect(() => setSelected(0), [query]);
 
@@ -69,9 +69,7 @@ export default function SearchDialog({ tree, titleOf, onClose }) {
         </div>
         <div className="search-section">{query.trim() ? 'Kết quả' : 'Gần đây'}</div>
         <ul className="search-results" ref={listRef}>
-          {results.map((p, i) => {
-            const parents = pathOf(tree.byId, p.id).slice(0, -1);
-            return (
+          {results.map((p, i) => (
               <li key={p.id}>
                 <button
                   className={`search-result ${i === selected ? 'selected' : ''}`}
@@ -80,13 +78,9 @@ export default function SearchDialog({ tree, titleOf, onClose }) {
                 >
                   <span className="tree-icon">{p.icon || <DocIcon size={16} />}</span>
                   <span className={`search-title ${titleOf(p) ? '' : 'untitled'}`}>{titleOf(p) || UNTITLED}</span>
-                  {parents.length > 0 && (
-                    <span className="search-path">{parents.map((a) => titleOf(a) || UNTITLED).join(' / ')}</span>
-                  )}
                 </button>
               </li>
-            );
-          })}
+          ))}
           {results.length === 0 && <li className="search-empty">Không tìm thấy trang nào.</li>}
         </ul>
       </div>

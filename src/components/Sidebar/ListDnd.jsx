@@ -10,8 +10,8 @@ import {
   useSensor,
   useSensors,
 } from '@dnd-kit/core';
-import { computeMove, isSelfOrDescendant, UNTITLED } from '../../data/tree.js';
-import { movePage } from '../../data/pages.js';
+import { computeMove, UNTITLED } from '../../data/tree.js';
+import { reorderPages } from '../../data/pages.js';
 
 // Trạng thái kéo thả hiện tại: trang đang kéo + chỗ sẽ thả ({ id, pos })
 const DragState = createContext({ activeId: null, drop: null });
@@ -23,17 +23,14 @@ function pointerY(event) {
   return startY + event.delta.y;
 }
 
-// Chia hàng đích thành 3 vùng: 1/4 trên = chèn trước, 1/4 dưới = chèn sau, giữa = thành trang con
+// Nửa trên của hàng đích = chèn trước, nửa dưới = chèn sau
 function dropPosition(event) {
   const rect = event.over?.rect;
   if (!rect) return null;
-  const ratio = (pointerY(event) - rect.top) / rect.height;
-  if (ratio < 0.25) return 'before';
-  if (ratio > 0.75) return 'after';
-  return 'inside';
+  return pointerY(event) < rect.top + rect.height / 2 ? 'before' : 'after';
 }
 
-export function TreeDnd({ uid, tree, ctx, children }) {
+export function ListDnd({ uid, list, titleOf, children }) {
   const [activeId, setActiveId] = useState(null);
   const [drop, setDrop] = useState(null);
 
@@ -47,7 +44,7 @@ export function TreeDnd({ uid, tree, ctx, children }) {
   const update = (event) => {
     const overId = event.over?.id;
     const pos = dropPosition(event);
-    if (!overId || !pos || isSelfOrDescendant(tree, event.active.id, overId)) setDrop(null);
+    if (!overId || !pos || overId === event.active.id) setDrop(null);
     else if (drop?.id !== overId || drop?.pos !== pos) setDrop({ id: overId, pos });
   };
 
@@ -60,13 +57,11 @@ export function TreeDnd({ uid, tree, ctx, children }) {
     const target = drop;
     reset();
     if (!target) return;
-    const move = computeMove(tree, event.active.id, target.id, target.pos, (id) => ctx.expanded.has(id));
-    if (!move) return;
-    movePage(uid, event.active.id, move.parentId, move.orders);
-    if (move.parentId) ctx.expand(move.parentId);
+    const orders = computeMove(list, event.active.id, target.id, target.pos);
+    if (orders) reorderPages(uid, orders);
   };
 
-  const active = activeId ? tree.byId.get(activeId) : null;
+  const active = activeId ? list.find((p) => p.id === activeId) : null;
 
   return (
     <DragState.Provider value={{ activeId, drop }}>
@@ -84,7 +79,7 @@ export function TreeDnd({ uid, tree, ctx, children }) {
           {active && (
             <div className="tree-drag-overlay">
               <span className="tree-icon">{active.icon || '📄'}</span>
-              <span className="tree-title">{ctx.titleOf(active) || UNTITLED}</span>
+              <span className="tree-title">{titleOf(active) || UNTITLED}</span>
             </div>
           )}
         </DragOverlay>
@@ -93,8 +88,8 @@ export function TreeDnd({ uid, tree, ctx, children }) {
   );
 }
 
-// Gắn khả năng kéo + nhận thả vào một hàng trong cây
-export function useTreeRowDnd(id) {
+// Gắn khả năng kéo + nhận thả vào một hàng trong danh sách
+export function useListRowDnd(id) {
   const { activeId, drop } = useContext(DragState);
   const drag = useDraggable({ id });
   const dropZone = useDroppable({ id });

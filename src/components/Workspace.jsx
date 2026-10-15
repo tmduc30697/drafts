@@ -1,7 +1,7 @@
 import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { usePages } from '../hooks/usePages.js';
 import { goHome, goToPage, useHashRoute } from '../hooks/useHashRoute.js';
-import { buildTree, pathOf, UNTITLED } from '../data/tree.js';
+import { buildList, UNTITLED } from '../data/tree.js';
 import { createPage, trashPage } from '../data/pages.js';
 import { ensureOnboarding } from '../data/onboarding.js';
 import { loadJSON, saveJSON } from '../lib/storage.js';
@@ -19,40 +19,15 @@ const PageView = lazy(() => import('./PageView/PageView.jsx'));
 export default function Workspace({ user }) {
   const uid = user.uid;
   const { pages, loaded } = usePages(uid);
-  const tree = useMemo(() => buildTree(pages), [pages]);
+  const { list, byId } = useMemo(() => buildList(pages), [pages]);
   const route = useHashRoute();
   const currentId = route.view === 'page' ? route.id : null;
-  const currentPage = currentId ? tree.byId.get(currentId) : null;
+  const currentPage = currentId ? byId.get(currentId) : null;
 
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
   // Tiêu đề đang gõ (chưa lưu) để sidebar cập nhật ngay, không chờ debounce
   const [liveTitles, setLiveTitles] = useState({});
-
-  // Trạng thái mở rộng của cây, lưu riêng trên từng máy
-  const expandedKey = `drafts:expanded:${uid}`;
-  const [expanded, setExpanded] = useState(() => new Set(loadJSON(expandedKey, [])));
-  const updateExpanded = useCallback(
-    (fn) =>
-      setExpanded((prev) => {
-        const next = fn(new Set(prev));
-        saveJSON(expandedKey, [...next]);
-        return next;
-      }),
-    [expandedKey],
-  );
-
-  // Mở trang thì tự mở rộng các trang tổ tiên để thấy nó trong sidebar
-  useEffect(() => {
-    if (!currentPage) return;
-    const ancestors = pathOf(tree.byId, currentPage.id).slice(0, -1);
-    if (ancestors.some((p) => !expanded.has(p.id))) {
-      updateExpanded((s) => {
-        ancestors.forEach((p) => s.add(p.id));
-        return s;
-      });
-    }
-  }, [currentPage, tree, expanded, updateExpanded]);
 
   // Ghi nhớ trang mở gần nhất trên máy này
   const lastKey = `drafts:last:${uid}`;
@@ -64,9 +39,9 @@ export default function Workspace({ user }) {
   useEffect(() => {
     if (route.view !== 'home' || !loaded) return;
     const last = loadJSON(lastKey, null);
-    const target = (last && tree.byId.get(last)) || tree.roots[0];
+    const target = (last && byId.get(last)) || list[0];
     if (target) goToPage(target.id, { replace: true });
-  }, [route.view, loaded, tree, lastKey]);
+  }, [route.view, loaded, list, byId, lastKey]);
 
   // Tài khoản mới: tạo trang "Bắt đầu" (kiểm tra một lần mỗi phiên, sau khi đã có danh sách trang)
   const onboardingChecked = useRef(false);
@@ -81,35 +56,26 @@ export default function Workspace({ user }) {
   const ctx = useMemo(
     () => ({
       currentId,
-      expanded,
       titleOf: (p) => liveTitles[p.id] ?? p.title,
-      toggle: (id) =>
-        updateExpanded((s) => {
-          s.has(id) ? s.delete(id) : s.add(id);
-          return s;
-        }),
-      expand: (id) => updateExpanded((s) => s.add(id)),
-      onCreate: (parentId) => {
-        const id = createPage(uid, pages, { parentId });
-        if (parentId) updateExpanded((s) => s.add(parentId));
+      onCreate: () => {
+        const id = createPage(uid, pages);
         setDrawerOpen(false);
         goToPage(id);
       },
       onTrash: (id) => {
-        // Đang mở trang bị xóa (hoặc trang con của nó) thì chuyển sang trang cha,
-        // không có cha thì trang gốc khác. Chọn ngay tại đây vì cây chưa kịp cập nhật.
-        const inTrashed = currentId && pathOf(tree.byId, currentId).some((p) => p.id === id);
-        trashPage(uid, pages, id);
-        if (inTrashed) {
-          const next = tree.parentOf(id) || tree.roots.find((p) => p.id !== id)?.id;
-          saveJSON(lastKey, null);
-          if (next) goToPage(next, { replace: true });
-          else goHome();
-        }
+        // Đang mở trang bị xóa thì chuyển sang trang kế bên (dưới, không có thì trên).
+        // Chọn ngay tại đây vì danh sách chưa kịp cập nhật.
+        trashPage(uid, id);
+        if (id !== currentId) return;
+        const i = list.findIndex((p) => p.id === id);
+        const next = list[i + 1] || list[i - 1];
+        saveJSON(lastKey, null);
+        if (next) goToPage(next.id, { replace: true });
+        else goHome();
       },
       onNavigate: () => setDrawerOpen(false),
     }),
-    [currentId, expanded, liveTitles, updateExpanded, uid, pages, tree, lastKey],
+    [currentId, liveTitles, uid, pages, list, lastKey],
   );
 
   // Cmd/Ctrl+K mở tìm kiếm (bắt ở pha capture để thắng phím tắt của editor)
@@ -134,7 +100,7 @@ export default function Workspace({ user }) {
       <aside className="sidebar">
         <Sidebar
           user={user}
-          tree={tree}
+          list={list}
           ctx={ctx}
           route={route}
           onOpenSearch={() => {
@@ -148,7 +114,6 @@ export default function Workspace({ user }) {
 
       <main className="main">
         <Topbar
-          path={currentPage ? pathOf(tree.byId, currentPage.id) : []}
           title={route.view === 'trash' ? 'Thùng rác' : null}
           ctx={ctx}
           currentPage={currentPage}
@@ -164,17 +129,17 @@ export default function Workspace({ user }) {
             <TrashView uid={uid} pages={pages} />
           ) : route.view === 'page' ? (
             <div className="center-screen muted">Trang không tồn tại hoặc đã ở trong thùng rác.</div>
-          ) : route.view === 'home' && tree.roots.length === 0 ? (
+          ) : route.view === 'home' && list.length === 0 ? (
             <div className="center-screen">
               <p className="muted">Chưa có trang nào.</p>
-              <button className="btn" onClick={() => ctx.onCreate(null)}>
+              <button className="btn" onClick={ctx.onCreate}>
                 <PlusIcon size={16} /> Tạo trang
               </button>
             </div>
           ) : null}
         </div>
       </main>
-      {searchOpen && <SearchDialog tree={tree} titleOf={ctx.titleOf} onClose={() => setSearchOpen(false)} />}
+      {searchOpen && <SearchDialog list={list} titleOf={ctx.titleOf} onClose={() => setSearchOpen(false)} />}
     </div>
   );
 }
@@ -184,8 +149,8 @@ function omit(obj, key) {
   return rest;
 }
 
-// Thanh trên cùng: nút mở drawer (điện thoại), breadcrumb, menu trang
-function Topbar({ path, title, ctx, currentPage, onOpenDrawer, onOpenSearch }) {
+// Thanh trên cùng: nút mở drawer (điện thoại), tên trang hiện tại, menu trang
+function Topbar({ title, ctx, currentPage, onOpenDrawer, onOpenSearch }) {
   const [menu, setMenu] = useState(null);
   return (
     <header className="topbar">
@@ -194,15 +159,12 @@ function Topbar({ path, title, ctx, currentPage, onOpenDrawer, onOpenSearch }) {
       </button>
       <div className="breadcrumb">
         {title && <span className="crumb">{title}</span>}
-        {path.map((p, i) => (
-          <span key={p.id} className="crumb-wrap">
-            {i > 0 && <span className="crumb-sep">/</span>}
-            <a className="crumb" href={`#/p/${p.id}`}>
-              {p.icon && <span className="crumb-icon">{p.icon}</span>}
-              {ctx.titleOf(p) || UNTITLED}
-            </a>
+        {currentPage && (
+          <span className="crumb">
+            {currentPage.icon && <span className="crumb-icon">{currentPage.icon}</span>}
+            {ctx.titleOf(currentPage) || UNTITLED}
           </span>
-        ))}
+        )}
       </div>
       <div className="topbar-actions">
         <SyncIndicator />
@@ -220,7 +182,6 @@ function Topbar({ path, title, ctx, currentPage, onOpenDrawer, onOpenSearch }) {
           anchor={menu}
           onClose={() => setMenu(null)}
           items={[
-            { label: 'Thêm trang con', icon: <PlusIcon size={16} />, onClick: () => ctx.onCreate(currentPage.id) },
             { label: 'Chuyển vào thùng rác', icon: <TrashIcon size={16} />, danger: true, onClick: () => ctx.onTrash(currentPage.id) },
           ]}
         />

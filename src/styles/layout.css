@@ -99,12 +99,6 @@
   font-size: 14px;
 }
 
-.crumb-wrap {
-  display: inline-flex;
-  align-items: center;
-  min-width: 0;
-}
-
 .crumb {
   padding: 2px 6px;
   border-radius: 4px;
@@ -114,16 +108,8 @@
   text-overflow: ellipsis;
 }
 
-a.crumb:hover {
-  background: var(--bg-hover);
-}
-
 .crumb-icon {
   margin-right: 4px;
-}
-
-.crumb-sep {
-  color: var(--text-faint);
 }
 
 .topbar-actions {
@@ -219,14 +205,14 @@ a.crumb:hover {
   margin-top: 12px;
 }
 
-/* Hàng trong cây trang */
+/* Hàng trong danh sách trang */
 .tree-row {
   position: relative;
   display: flex;
   align-items: center;
   gap: 2px;
   min-height: 30px;
-  padding-right: 4px;
+  padding: 0 4px 0 8px;
   border-radius: 6px;
   font-size: 14px;
   user-select: none;
@@ -242,29 +228,6 @@ a.crumb:hover {
 .tree-row.active {
   background: var(--bg-active);
   font-weight: 600;
-}
-
-.tree-toggle {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 22px;
-  height: 22px;
-  border-radius: 4px;
-  color: var(--text-muted);
-  flex-shrink: 0;
-}
-
-.tree-toggle.leaf {
-  color: var(--text-faint);
-}
-
-.tree-toggle:hover {
-  background: var(--bg-active);
-}
-
-.rot90 {
-  transform: rotate(90deg);
 }
 
 .tree-link {
@@ -318,12 +281,6 @@ a.crumb:hover {
   height: 24px;
 }
 
-.tree-empty {
-  padding: 4px 10px;
-  font-size: 13px;
-  color: var(--text-faint);
-}
-
 /* Popover và menu */
 .popover {
   position: fixed;
@@ -365,14 +322,9 @@ a.crumb:hover {
   color: var(--danger);
 }
 
-/* Kéo thả trong cây */
+/* Kéo thả trong danh sách */
 .tree-row.dragging {
   opacity: 0.4;
-}
-
-.tree-row.drop-inside {
-  background: color-mix(in srgb, var(--accent) 18%, transparent);
-  box-shadow: inset 0 0 0 1px var(--accent);
 }
 
 .tree-row.drop-before::before,
@@ -494,20 +446,10 @@ a.crumb:hover {
 }
 
 .search-title {
-  flex-shrink: 0;
-  max-width: 60%;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.search-path {
   min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  font-size: 12px;
-  color: var(--text-faint);
 }
 
 .search-empty {
