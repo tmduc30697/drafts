@@ -2,8 +2,18 @@ import { isFirebaseConfigured } from './firebase.js';
 import { useAuth } from './hooks/useAuth.js';
 import LoginScreen from './components/LoginScreen.jsx';
 import Workspace from './components/Workspace.jsx';
+import UpdateSnackbar from './components/UpdateSnackbar.jsx';
 
 export default function App() {
+  return (
+    <>
+      <Main />
+      <UpdateSnackbar />
+    </>
+  );
+}
+
+function Main() {
   const user = useAuth();
 
   if (!isFirebaseConfigured) {

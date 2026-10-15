@@ -147,3 +147,39 @@ textarea {
 .login-error {
   color: var(--danger);
 }
+
+/* Snackbar báo có bản mới */
+.snackbar {
+  position: fixed;
+  left: 50%;
+  bottom: calc(16px + env(safe-area-inset-bottom));
+  transform: translateX(-50%);
+  z-index: 200;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 10px 10px 16px;
+  border-radius: 10px;
+  background: #2f2f2f;
+  color: #fff;
+  box-shadow: var(--shadow);
+  font-size: 14px;
+  white-space: nowrap;
+}
+
+.snackbar-action {
+  padding: 4px 10px;
+  border-radius: 6px;
+  color: #6cb6ff;
+  font-weight: 600;
+}
+
+.snackbar-action:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.snackbar-close {
+  padding: 0 6px;
+  font-size: 18px;
+  color: rgba(255, 255, 255, 0.6);
+}
