@@ -1,0 +1,139 @@
+/* Trang: cột nội dung tối đa ~720px trên desktop, rộng hết màn hình trên điện thoại.
+   BlockNote chừa lề trái/phải cho tay nắm kéo block, header dùng cùng lề để thẳng hàng. */
+.page {
+  --page-pad: 54px;
+  max-width: calc(var(--content-max) + 2 * var(--page-pad));
+  margin: 0 auto;
+  padding: 48px 0 30vh;
+}
+
+@media (max-width: 767px) {
+  .page {
+    --page-pad: 20px;
+    padding-top: 16px;
+  }
+}
+
+.page-header {
+  padding: 0 var(--page-pad);
+  padding-left: calc(var(--page-pad) + env(safe-area-inset-left));
+  padding-right: calc(var(--page-pad) + env(safe-area-inset-right));
+}
+
+.page-icon {
+  font-size: 56px;
+  line-height: 1.1;
+  padding: 4px;
+  margin-left: -4px;
+  border-radius: 8px;
+}
+
+.page-icon:hover {
+  background: var(--bg-hover);
+}
+
+.page-add-icon {
+  padding: 4px 8px;
+  margin-left: -8px;
+  border-radius: 6px;
+  font-size: 14px;
+  color: var(--text-faint);
+  opacity: 0;
+  transition: opacity 0.15s;
+}
+
+.page-header:hover .page-add-icon,
+.page-add-icon:focus-visible {
+  opacity: 1;
+}
+
+@media (hover: none) {
+  .page-add-icon {
+    opacity: 1;
+  }
+}
+
+.page-add-icon:hover {
+  background: var(--bg-hover);
+}
+
+.page-title {
+  display: block;
+  width: 100%;
+  margin: 8px 0 12px;
+  padding: 0;
+  border: none;
+  outline: none;
+  resize: none;
+  overflow: hidden;
+  background: transparent;
+  font-size: 40px;
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+@media (max-width: 767px) {
+  .page-title {
+    font-size: 30px;
+  }
+}
+
+.page-title::placeholder {
+  color: var(--text-faint);
+}
+
+.editor-note {
+  padding: 0 var(--page-pad);
+  color: var(--text-muted);
+  font-size: 14px;
+}
+
+.editor-note.error {
+  color: var(--danger);
+}
+
+/* Đồng bộ BlockNote với bảng màu và font của app */
+.bn-container {
+  --bn-font-family: var(--font);
+}
+
+.bn-container[data-color-scheme] {
+  --bn-colors-editor-background: var(--bg);
+  --bn-colors-editor-text: var(--text);
+}
+
+.page .bn-editor {
+  padding-inline: var(--page-pad);
+}
+
+/* Bộ chọn emoji */
+.emoji-popover {
+  overflow: hidden;
+}
+
+.emoji-popover-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 12px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-muted);
+}
+
+.emoji-holder em-emoji-picker {
+  --shadow: none;
+  --border-radius: 0;
+  max-width: calc(100vw - 16px);
+}
+
+.link-btn {
+  font-size: 13px;
+  color: var(--text-muted);
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+
+.link-btn:hover {
+  background: var(--bg-hover);
+}

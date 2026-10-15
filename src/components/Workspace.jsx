@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { lazy, Suspense, useCallback, useEffect, useMemo, useState } from 'react';
 import { usePages } from '../hooks/usePages.js';
 import { goHome, goToPage, useHashRoute } from '../hooks/useHashRoute.js';
 import { buildTree, pathOf, UNTITLED } from '../data/tree.js';
@@ -7,6 +7,9 @@ import { loadJSON, saveJSON } from '../lib/storage.js';
 import { MenuIcon, MoreIcon, PlusIcon, TrashIcon } from './icons.jsx';
 import Menu from './Menu.jsx';
 import Sidebar from './Sidebar/Sidebar.jsx';
+
+// BlockNote khá nặng: tách thành chunk riêng để màn hình đăng nhập và sidebar hiện nhanh
+const PageView = lazy(() => import('./PageView/PageView.jsx'));
 
 // Khung làm việc sau khi đăng nhập: sidebar + vùng nội dung
 export default function Workspace({ user }) {
@@ -119,7 +122,9 @@ export default function Workspace({ user }) {
         />
         <div className="content">
           {!loaded ? null : currentPage ? (
-            <div className="page-placeholder">{ctx.titleOf(currentPage) || UNTITLED}</div>
+            <Suspense fallback={null}>
+              <PageView key={currentPage.id} uid={uid} page={currentPage} onLiveTitle={setLiveTitle} />
+            </Suspense>
           ) : route.view === 'page' ? (
             <div className="center-screen muted">Trang không tồn tại hoặc đã ở trong thùng rác.</div>
           ) : route.view === 'home' && tree.roots.length === 0 ? (
