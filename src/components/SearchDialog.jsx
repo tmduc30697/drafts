@@ -76,7 +76,7 @@ export default function SearchDialog({ list, titleOf, onClose }) {
                   onMouseMove={() => setSelected(i)}
                   onClick={() => open(p)}
                 >
-                  <span className="tree-icon">{p.icon || <DocIcon size={16} />}</span>
+                  <span className="tree-icon"><DocIcon size={16} /></span>
                   <span className={`search-title ${titleOf(p) ? '' : 'untitled'}`}>{titleOf(p) || UNTITLED}</span>
                 </button>
               </li>

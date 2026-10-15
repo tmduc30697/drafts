@@ -108,10 +108,6 @@
   text-overflow: ellipsis;
 }
 
-.crumb-icon {
-  margin-right: 4px;
-}
-
 .topbar-actions {
   display: flex;
   align-items: center;

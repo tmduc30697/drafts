@@ -8,7 +8,7 @@ Bản chạy thật: https://tmduc30697.github.io/drafts/
 
 - Đăng nhập bắt buộc bằng Google. Đã đăng nhập thì lần sau vào thẳng, kể cả khi offline.
 - Sidebar là danh sách trang phẳng: nút "+ Trang mới" ở cuối danh sách, kéo thả để đổi thứ tự (trên điện thoại: nhấn giữ rồi kéo).
-- Trang gồm icon emoji, tiêu đề lớn và trình soạn thảo block [BlockNote](https://www.blocknotejs.org/): gõ `/` để chèn block, kéo thả block.
+- Trang gồm tiêu đề lớn và trình soạn thảo block [BlockNote](https://www.blocknotejs.org/): gõ `/` để chèn block, kéo thả block.
 - Tự lưu sau 1.5 giây ngừng gõ, và lưu ngay khi rời trang hoặc ẩn app.
 - Thùng rác: khôi phục hoặc xóa vĩnh viễn.
 - Tìm trang theo tiêu đề bằng `⌘K` / `Ctrl+K`, hoặc nút kính lúp trên điện thoại.
@@ -55,7 +55,7 @@ App chạy được trên gói Spark miễn phí: không dùng Cloud Functions, 
 
 | Đường dẫn | Nội dung |
 | --- | --- |
-| `users/{uid}/pages/{pageId}` | Metadata: `title, icon, parentId (luôn null, dành cho phân cấp sau này), order, createdAt, updatedAt, trashedAt`. Sidebar chỉ nghe collection này. |
+| `users/{uid}/pages/{pageId}` | Metadata: `title, parentId (luôn null, dành cho phân cấp sau này), order, createdAt, updatedAt, trashedAt`. Sidebar chỉ nghe collection này. |
 | `users/{uid}/contents/{pageId}` | `blocks` (chuỗi JSON của BlockNote) và `updatedAt`. Chỉ tải khi mở trang. |
 | `users/{uid}/meta/settings` | `onboarded: true` khi đã tạo trang "Bắt đầu". |
 
@@ -105,7 +105,7 @@ src/
     LoginScreen.jsx            Màn hình đăng nhập Google
     Workspace.jsx              Khung chính: sidebar, thanh trên, nội dung
     Sidebar/                   Sidebar, danh sách trang, kéo thả (dnd-kit)
-    PageView/                  Tiêu đề, emoji, editor BlockNote
+    PageView/                  Tiêu đề, editor BlockNote
     TrashView.jsx              Thùng rác
     SearchDialog.jsx           Tìm kiếm
     SyncIndicator.jsx          Biểu tượng offline/lỗi đồng bộ

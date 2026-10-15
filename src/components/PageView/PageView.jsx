@@ -2,9 +2,8 @@ import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react
 import { updatePage } from '../../data/pages.js';
 import { useDebouncedSaver } from '../../hooks/useDebouncedSaver.js';
 import Editor from './Editor.jsx';
-import EmojiPicker from './EmojiPicker.jsx';
 
-// Một trang: icon emoji, tiêu đề lớn sửa trực tiếp, và nội dung BlockNote
+// Một trang: tiêu đề lớn sửa trực tiếp và nội dung BlockNote
 export default function PageView({ uid, page, onLiveTitle }) {
   const editorRef = useRef(null);
   const onEditorReady = useCallback((editor) => {
@@ -23,53 +22,10 @@ export default function PageView({ uid, page, onLiveTitle }) {
   return (
     <article className="page">
       <header className="page-header">
-        <PageIcon uid={uid} page={page} />
         <PageTitle uid={uid} page={page} onLiveTitle={onLiveTitle} onEnter={focusEditor} />
       </header>
       <Editor uid={uid} pageId={page.id} onReady={onEditorReady} />
     </article>
-  );
-}
-
-function PageIcon({ uid, page }) {
-  const [anchor, setAnchor] = useState(null);
-  const close = useCallback(() => setAnchor(null), []);
-  const select = useCallback(
-    (emoji) => {
-      updatePage(uid, page.id, { icon: emoji });
-      setAnchor(null);
-    },
-    [uid, page.id],
-  );
-  const toggle = (e) => setAnchor(anchor ? null : e.currentTarget);
-
-  return (
-    <>
-      {page.icon ? (
-        <button className="page-icon" onClick={toggle} aria-label="Đổi biểu tượng">
-          {page.icon}
-        </button>
-      ) : (
-        <button className="page-add-icon" onClick={toggle}>
-          ☺ Thêm biểu tượng
-        </button>
-      )}
-      {anchor && (
-        <EmojiPicker
-          anchor={anchor}
-          onSelect={select}
-          onRemove={
-            page.icon
-              ? () => {
-                  updatePage(uid, page.id, { icon: null });
-                  setAnchor(null);
-                }
-              : null
-          }
-          onClose={close}
-        />
-      )}
-    </>
   );
 }
 

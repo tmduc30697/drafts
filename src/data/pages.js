@@ -35,12 +35,11 @@ export function nextOrder(pages) {
 
 // Tạo trang mới ở cuối danh sách kèm document nội dung rỗng.
 // Trả về id ngay (không chờ server, chạy được offline).
-export function createPage(uid, pages, { title = '', icon = null, blocks = '[]' } = {}) {
+export function createPage(uid, pages, { title = '', blocks = '[]' } = {}) {
   const ref = doc(pagesCol(uid));
   const batch = writeBatch(db);
   batch.set(ref, {
     title,
-    icon,
     parentId: null, // danh sách phẳng, chưa dùng phân cấp
     order: nextOrder(pages),
     createdAt: serverTimestamp(),
@@ -53,7 +52,7 @@ export function createPage(uid, pages, { title = '', icon = null, blocks = '[]' 
   return ref.id;
 }
 
-// Sửa metadata (title, icon) của một trang
+// Sửa metadata (vd. title) của một trang
 export function updatePage(uid, id, fields) {
   return track(updateDoc(pageRef(uid, id), { ...fields, updatedAt: serverTimestamp() }));
 }

@@ -21,7 +21,6 @@ export function usePages(uid) {
           return {
             id: d.id,
             title: data.title || '',
-            icon: data.icon || null,
             parentId: data.parentId || null,
             order: typeof data.order === 'number' ? data.order : 0,
             createdAt: toMillis(data.createdAt) || 0,

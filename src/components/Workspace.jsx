@@ -161,7 +161,6 @@ function Topbar({ title, ctx, currentPage, onOpenDrawer, onOpenSearch }) {
         {title && <span className="crumb">{title}</span>}
         {currentPage && (
           <span className="crumb">
-            {currentPage.icon && <span className="crumb-icon">{currentPage.icon}</span>}
             {ctx.titleOf(currentPage) || UNTITLED}
           </span>
         )}

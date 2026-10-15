@@ -30,7 +30,7 @@ function PageRow({ page, ctx }) {
         .join(' ')}
     >
       <a className="tree-link" href={`#/p/${page.id}`} onClick={ctx.onNavigate} draggable={false}>
-        <span className="tree-icon">{page.icon || <DocIcon size={16} />}</span>
+        <span className="tree-icon"><DocIcon size={16} /></span>
         <span className={`tree-title ${title ? '' : 'untitled'}`}>{title || UNTITLED}</span>
       </a>
       <div className="tree-actions">

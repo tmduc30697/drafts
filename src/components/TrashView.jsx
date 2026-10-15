@@ -27,7 +27,7 @@ export default function TrashView({ uid, pages }) {
         <ul className="trash-list">
           {items.map((page) => (
             <li key={page.id} className="trash-item">
-              <span className="tree-icon">{page.icon || <DocIcon size={16} />}</span>
+              <span className="tree-icon"><DocIcon size={16} /></span>
               <div className="trash-info">
                 <div className={`trash-name ${page.title ? '' : 'untitled'}`}>{page.title || UNTITLED}</div>
                 <div className="trash-meta">Xóa lúc {dateFmt.format(page.trashedAt)}</div>

@@ -44,7 +44,6 @@ export async function ensureOnboarding(uid, pages) {
   const batch = writeBatch(db);
   batch.set(ref, {
     title: 'Bắt đầu',
-    icon: '👋',
     parentId: null,
     order: nextOrder(pages),
     createdAt: serverTimestamp(),

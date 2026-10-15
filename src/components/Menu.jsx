@@ -7,7 +7,7 @@ export function Popover({ anchor, onClose, children, className = '' }) {
   const [pos, setPos] = useState({ top: -9999, left: -9999 });
 
   // Tính vị trí sau khi đo kích thước popover, giữ trong khung nhìn.
-  // Đo lại khi nội dung đổi kích thước (vd. bộ chọn emoji tải xong).
+  // Đo lại khi nội dung đổi kích thước (vd. nội dung tải xong sau).
   useLayoutEffect(() => {
     const el = ref.current;
     if (!el || !anchor) return;

@@ -12,6 +12,7 @@ import {
 } from '@dnd-kit/core';
 import { computeMove, UNTITLED } from '../../data/tree.js';
 import { reorderPages } from '../../data/pages.js';
+import { DocIcon } from '../icons.jsx';
 
 // Trạng thái kéo thả hiện tại: trang đang kéo + chỗ sẽ thả ({ id, pos })
 const DragState = createContext({ activeId: null, drop: null });
@@ -78,7 +79,7 @@ export function ListDnd({ uid, list, titleOf, children }) {
         <DragOverlay dropAnimation={null}>
           {active && (
             <div className="tree-drag-overlay">
-              <span className="tree-icon">{active.icon || '📄'}</span>
+              <span className="tree-icon"><DocIcon size={16} /></span>
               <span className="tree-title">{titleOf(active) || UNTITLED}</span>
             </div>
           )}
