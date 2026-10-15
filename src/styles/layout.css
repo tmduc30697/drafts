@@ -515,3 +515,23 @@ a.crumb:hover {
   color: var(--text-muted);
   font-size: 14px;
 }
+
+/* Biểu tượng mất đồng bộ */
+.sync-indicator {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  color: var(--text-muted);
+}
+
+.sync-indicator.error {
+  color: var(--danger);
+}
+
+.sync-popover {
+  max-width: 260px;
+  padding: 10px 12px;
+  font-size: 13px;
+}

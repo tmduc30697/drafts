@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { onSnapshot } from 'firebase/firestore';
 import { pagesCol } from '../data/pages.js';
+import { reportSyncError } from '../data/syncStatus.js';
 
 const toMillis = (t) => (t ? t.toMillis() : null);
 
@@ -31,7 +32,7 @@ export function usePages(uid) {
         setState({ pages, loaded: true, fromCache: snap.metadata.fromCache });
       },
       (err) => {
-        console.error('Không nghe được danh sách trang:', err);
+        reportSyncError(err);
         setState((s) => ({ ...s, loaded: true }));
       },
     );

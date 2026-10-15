@@ -15,6 +15,13 @@ export function subscribeSyncError(fn) {
   return () => listeners.delete(fn);
 }
 
+// Ghi nhận lỗi từ nơi khác (vd. listener bị server từ chối)
+export function reportSyncError(err) {
+  console.error('Lỗi đồng bộ Firestore:', err);
+  lastError = err;
+  emit();
+}
+
 // Bọc một lần ghi: thành công thì xóa lỗi cũ, thất bại thì ghi nhận lỗi
 export function track(promise) {
   promise.then(
@@ -24,11 +31,7 @@ export function track(promise) {
         emit();
       }
     },
-    (err) => {
-      console.error('Lỗi đồng bộ Firestore:', err);
-      lastError = err;
-      emit();
-    },
+    reportSyncError,
   );
   return promise;
 }

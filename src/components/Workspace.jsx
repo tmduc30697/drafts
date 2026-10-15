@@ -9,6 +9,7 @@ import Menu from './Menu.jsx';
 import Sidebar from './Sidebar/Sidebar.jsx';
 import TrashView from './TrashView.jsx';
 import SearchDialog from './SearchDialog.jsx';
+import SyncIndicator from './SyncIndicator.jsx';
 
 // BlockNote khá nặng: tách thành chunk riêng để màn hình đăng nhập và sidebar hiện nhanh
 const PageView = lazy(() => import('./PageView/PageView.jsx'));
@@ -187,6 +188,7 @@ function Topbar({ path, title, ctx, currentPage, onOpenDrawer, onOpenSearch }) {
         ))}
       </div>
       <div className="topbar-actions">
+        <SyncIndicator />
         <button className="icon-btn mobile-only" aria-label="Tìm kiếm" onClick={onOpenSearch}>
           <SearchIcon />
         </button>
