@@ -96,14 +96,20 @@ export default function Workspace({ user }) {
         goToPage(id);
       },
       onTrash: (id) => {
-        // Đang mở trang bị xóa (hoặc trang con của nó) thì quay về trang khác
+        // Đang mở trang bị xóa (hoặc trang con của nó) thì chuyển sang trang cha,
+        // không có cha thì trang gốc khác. Chọn ngay tại đây vì cây chưa kịp cập nhật.
         const inTrashed = currentId && pathOf(tree.byId, currentId).some((p) => p.id === id);
         trashPage(uid, pages, id);
-        if (inTrashed) goHome();
+        if (inTrashed) {
+          const next = tree.parentOf(id) || tree.roots.find((p) => p.id !== id)?.id;
+          saveJSON(lastKey, null);
+          if (next) goToPage(next, { replace: true });
+          else goHome();
+        }
       },
       onNavigate: () => setDrawerOpen(false),
     }),
-    [currentId, expanded, liveTitles, updateExpanded, uid, pages, tree],
+    [currentId, expanded, liveTitles, updateExpanded, uid, pages, tree, lastKey],
   );
 
   // Cmd/Ctrl+K mở tìm kiếm (bắt ở pha capture để thắng phím tắt của editor)
