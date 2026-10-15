@@ -1,7 +1,7 @@
 /* Trang: cột nội dung tối đa ~720px trên desktop, rộng hết màn hình trên điện thoại.
-   BlockNote chừa lề trái/phải cho tay nắm kéo block, header dùng cùng lề để thẳng hàng. */
+   Tiêu đề và nội dung dùng cùng lề để thẳng hàng. */
 .page {
-  --page-pad: 54px;
+  --page-pad: 32px;
   max-width: calc(var(--content-max) + 2 * var(--page-pad));
   margin: 0 auto;
   padding: 48px 0 30vh;
@@ -55,18 +55,92 @@
   color: var(--danger);
 }
 
-/* Đồng bộ BlockNote với bảng màu và font của app */
-.bn-container {
-  --bn-font-family: var(--font);
+/* Editor văn bản (CodeMirror): trông như văn bản thuần, cùng font với app */
+.text-editor {
+  padding: 0 var(--page-pad);
+  padding-left: calc(var(--page-pad) + env(safe-area-inset-left));
+  padding-right: calc(var(--page-pad) + env(safe-area-inset-right));
 }
 
-.bn-container[data-color-scheme] {
-  --bn-colors-editor-background: var(--bg);
-  --bn-colors-editor-text: var(--text);
+.text-editor .cm-editor {
+  background: transparent;
+  color: var(--text);
+  font-size: 16px;
 }
 
-.page .bn-editor {
-  padding-inline: var(--page-pad);
+.text-editor .cm-editor.cm-focused {
+  outline: none;
+}
+
+.text-editor .cm-scroller {
+  font-family: var(--font);
+  line-height: 1.65;
+  overflow: visible;
+}
+
+.text-editor .cm-content {
+  min-height: 50vh; /* bấm vào vùng trống bên dưới vẫn đặt được con trỏ */
+  padding: 0 0 4px;
+  caret-color: var(--text);
+}
+
+.text-editor .cm-line {
+  padding: 0;
+}
+
+.text-editor .cm-placeholder {
+  color: var(--text-faint);
+}
+
+/* Khối code: nền xám, font monospace, bo góc ở dòng đầu/cuối */
+.text-editor .cm-codeblock {
+  background: var(--bg-code);
+  font-family: ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
+  font-size: 14px;
+  padding: 0 14px;
+}
+
+.text-editor .cm-codeblock-begin {
+  border-top-left-radius: 6px;
+  border-top-right-radius: 6px;
+  padding-top: 6px;
+  color: var(--text-faint);
+}
+
+.text-editor .cm-codeblock-end {
+  border-bottom-left-radius: 6px;
+  border-bottom-right-radius: 6px;
+  padding-bottom: 6px;
+  color: var(--text-faint);
+}
+
+/* Menu "/" chọn khối code */
+.cm-tooltip.cm-tooltip-autocomplete {
+  border: none;
+  border-radius: 10px;
+  background: var(--bg-elevated);
+  box-shadow: var(--shadow);
+  overflow: hidden;
+  font-family: var(--font);
+}
+
+.cm-tooltip.cm-tooltip-autocomplete > ul {
+  max-height: 280px;
+  padding: 4px;
+  font-family: var(--font);
+}
+
+.cm-tooltip.cm-tooltip-autocomplete > ul > li {
+  padding: 6px 10px;
+  border-radius: 6px;
+  color: var(--text);
+  font-size: 14px;
+  line-height: 1.4;
+}
+
+.cm-tooltip.cm-tooltip-autocomplete > ul > li[aria-selected] {
+  background: var(--bg-active);
+  color: var(--text);
 }
 
 .link-btn {

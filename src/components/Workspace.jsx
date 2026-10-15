@@ -12,7 +12,7 @@ import TrashView from './TrashView.jsx';
 import SearchDialog from './SearchDialog.jsx';
 import SyncIndicator from './SyncIndicator.jsx';
 
-// BlockNote khá nặng: tách thành chunk riêng để màn hình đăng nhập và sidebar hiện nhanh
+// Editor tách thành chunk riêng để màn hình đăng nhập và sidebar hiện nhanh
 const PageView = lazy(() => import('./PageView/PageView.jsx'));
 
 // Khung làm việc sau khi đăng nhập: sidebar + vùng nội dung

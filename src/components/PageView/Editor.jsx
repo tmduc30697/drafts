@@ -1,38 +1,17 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { onSnapshot } from 'firebase/firestore';
-import { useCreateBlockNote } from '@blocknote/react';
-import { BlockNoteView } from '@blocknote/mantine';
-import { vi } from '@blocknote/core/locales';
-import '@blocknote/mantine/style.css';
+import { EditorState, Transaction } from '@codemirror/state';
+import { EditorView } from '@codemirror/view';
 import { contentRef } from '../../data/pages.js';
-import { MAX_CONTENT_BYTES, saveContent } from '../../data/contents.js';
+import { contentText, MAX_CONTENT_BYTES, saveContent } from '../../data/contents.js';
 import { useDebouncedSaver } from '../../hooks/useDebouncedSaver.js';
-import { useColorScheme } from '../../hooks/useColorScheme.js';
-
-// Đọc chuỗi JSON block đã lưu; rỗng hoặc hỏng thì trả về undefined (editor tự tạo 1 đoạn trống)
-function parseBlocks(json) {
-  try {
-    const blocks = JSON.parse(json || '[]');
-    return Array.isArray(blocks) && blocks.length ? blocks : undefined;
-  } catch {
-    return undefined;
-  }
-}
-
-// Bỏ ảnh/file nhúng dạng base64 (data:...) để không vượt giới hạn 1 MB của document
-function stripDataUrls(blocks) {
-  return blocks.map((b) => ({
-    ...b,
-    props: typeof b.props?.url === 'string' && b.props.url.startsWith('data:') ? { ...b.props, url: '' } : b.props,
-    children: b.children?.length ? stripDataUrls(b.children) : b.children,
-  }));
-}
+import { editorExtensions } from './editor/setup.js';
 
 const byteLength = (s) => new TextEncoder().encode(s).length;
 
-// Tải nội dung trang rồi mới dựng editor (BlockNote nhận nội dung ban đầu lúc khởi tạo)
+// Tải nội dung trang rồi mới dựng editor
 export default function Editor({ uid, pageId, onReady }) {
-  const [initial, setInitial] = useState(null); // { blocks } | { missing: true }
+  const [initial, setInitial] = useState(null); // { text } | { missing: true } | { error: true }
   // Hàm xử lý snapshot của editor đã dựng; trước khi nó gắn vào thì giữ snapshot mới nhất ở pending
   const snapshotHandler = useRef({ handle: null, pending: null });
   const started = useRef(false);
@@ -50,14 +29,14 @@ export default function Editor({ uid, pageId, onReady }) {
         }
         if (snap.exists()) {
           started.current = true;
-          setInitial({ blocks: snap.data().blocks || '[]' });
+          setInitial({ text: contentText(snap.data()) });
         }
         // Không có trong cache và chưa hỏi được server (offline): chưa thể mở
         else if (snap.metadata.fromCache) setInitial({ missing: true });
-        // Server xác nhận không có nội dung (trang cũ/lỗi): mở như trang trống
+        // Server xác nhận không có nội dung: mở như trang trống
         else {
           started.current = true;
-          setInitial({ blocks: '[]' });
+          setInitial({ text: '' });
         }
       },
       (err) => {
@@ -76,54 +55,71 @@ export default function Editor({ uid, pageId, onReady }) {
     <LoadedEditor
       uid={uid}
       pageId={pageId}
-      initialJson={initial.blocks}
+      initialText={initial.text}
       snapshotHandler={snapshotHandler}
       onReady={onReady}
     />
   );
 }
 
-function LoadedEditor({ uid, pageId, initialJson, snapshotHandler, onReady }) {
-  const theme = useColorScheme();
+function LoadedEditor({ uid, pageId, initialText, snapshotHandler, onReady }) {
+  const host = useRef(null);
+  const viewRef = useRef(null);
   const [tooLarge, setTooLarge] = useState(false);
-  // Chuỗi JSON đã lưu/đã áp gần nhất, để nhận ra snapshot "không có gì mới"
-  const lastKnown = useRef(initialJson);
-  // Đang tự thay nội dung bằng bản từ server: bỏ qua onChange khi đó
-  const applyingRemote = useRef(false);
-
-  const initialContent = useMemo(() => parseBlocks(initialJson), [initialJson]);
-  const editor = useCreateBlockNote({
-    initialContent,
-    dictionary: vi,
-    // Không khai báo uploadFile => BlockNote tắt upload, chỉ cho chèn ảnh bằng link
-  });
+  // Văn bản đã lưu/đã áp gần nhất, để nhận ra snapshot "không có gì mới"
+  const lastKnown = useRef(initialText);
 
   const saver = useDebouncedSaver(() => {
-    const json = JSON.stringify(stripDataUrls(editor.document));
-    if (json === lastKnown.current) return;
-    if (byteLength(json) > MAX_CONTENT_BYTES) {
+    const view = viewRef.current;
+    if (!view) return;
+    const text = view.state.doc.toString();
+    if (text === lastKnown.current) return;
+    if (byteLength(text) > MAX_CONTENT_BYTES) {
       setTooLarge(true);
       return;
     }
     setTooLarge(false);
-    lastKnown.current = json;
-    saveContent(uid, pageId, json);
+    lastKnown.current = text;
+    saveContent(uid, pageId, text);
   });
+
+  // Dựng CodeMirror một lần cho mỗi trang (component được key theo pageId)
+  useEffect(() => {
+    const view = new EditorView({
+      parent: host.current,
+      state: EditorState.create({
+        doc: initialText,
+        extensions: editorExtensions({
+          onDocChange: (u) => {
+            // Bỏ qua thay đổi do áp bản từ máy khác
+            if (!u.transactions.some((tr) => tr.annotation(Transaction.remote))) saver.schedule();
+          },
+        }),
+      }),
+    });
+    viewRef.current = view;
+    onReady?.(view);
+    return () => {
+      onReady?.(null);
+      view.destroy();
+    };
+    // initialText chỉ dùng lúc dựng; saver/onReady ổn định
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // Nhận bản mới từ máy khác. Chỉ áp vào editor khi KHÔNG có thay đổi chưa lưu,
   // để không ghi đè những gì đang gõ ("lưu sau thắng" khi cả hai cùng sửa).
   useEffect(() => {
     const handle = (snap) => {
       if (!snap.exists() || snap.metadata.hasPendingWrites) return; // bản ghi của chính máy này
-      const json = snap.data().blocks || '[]';
-      if (json === lastKnown.current || saver.isDirty()) return;
-      lastKnown.current = json;
-      applyingRemote.current = true;
-      try {
-        editor.replaceBlocks(editor.document, parseBlocks(json) || [{ type: 'paragraph' }]);
-      } finally {
-        applyingRemote.current = false;
-      }
+      const text = contentText(snap.data());
+      const view = viewRef.current;
+      if (!view || text === lastKnown.current || saver.isDirty()) return;
+      lastKnown.current = text;
+      view.dispatch({
+        changes: { from: 0, to: view.state.doc.length, insert: text },
+        annotations: [Transaction.remote.of(true), Transaction.addToHistory.of(false)],
+      });
     };
     const h = snapshotHandler.current;
     h.handle = handle;
@@ -135,25 +131,14 @@ function LoadedEditor({ uid, pageId, initialJson, snapshotHandler, onReady }) {
     return () => {
       h.handle = null;
     };
-  }, [editor, saver, snapshotHandler]);
-
-  useEffect(() => {
-    onReady?.(editor);
-    return () => onReady?.(null);
-  }, [editor, onReady]);
+  }, [saver, snapshotHandler]);
 
   return (
     <>
       {tooLarge && (
         <p className="editor-note error">Trang quá lớn (vượt 1 MB) nên chưa lưu được. Hãy bớt nội dung hoặc tách sang trang khác.</p>
       )}
-      <BlockNoteView
-        editor={editor}
-        theme={theme}
-        onChange={() => {
-          if (!applyingRemote.current) saver.schedule();
-        }}
-      />
+      <div ref={host} className="text-editor" />
     </>
   );
 }

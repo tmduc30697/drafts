@@ -3,20 +3,19 @@ import { updatePage } from '../../data/pages.js';
 import { useDebouncedSaver } from '../../hooks/useDebouncedSaver.js';
 import Editor from './Editor.jsx';
 
-// Một trang: tiêu đề lớn sửa trực tiếp và nội dung BlockNote
+// Một trang: tiêu đề lớn sửa trực tiếp và nội dung văn bản (CodeMirror)
 export default function PageView({ uid, page, onLiveTitle }) {
-  const editorRef = useRef(null);
-  const onEditorReady = useCallback((editor) => {
-    editorRef.current = editor;
+  const viewRef = useRef(null);
+  const onEditorReady = useCallback((view) => {
+    viewRef.current = view;
   }, []);
 
   // Enter ở tiêu đề: nhảy xuống đầu nội dung
   const focusEditor = () => {
-    const editor = editorRef.current;
-    if (!editor) return;
-    const first = editor.document[0];
-    if (first) editor.setTextCursorPosition(first, 'start');
-    editor.focus();
+    const view = viewRef.current;
+    if (!view) return;
+    view.dispatch({ selection: { anchor: 0 } });
+    view.focus();
   };
 
   return (

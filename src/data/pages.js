@@ -35,7 +35,7 @@ export function nextOrder(pages) {
 
 // Tạo trang mới ở cuối danh sách kèm document nội dung rỗng.
 // Trả về id ngay (không chờ server, chạy được offline).
-export function createPage(uid, pages, { title = '', blocks = '[]' } = {}) {
+export function createPage(uid, pages, { title = '', text = '' } = {}) {
   const ref = doc(pagesCol(uid));
   const batch = writeBatch(db);
   batch.set(ref, {
@@ -47,7 +47,7 @@ export function createPage(uid, pages, { title = '', blocks = '[]' } = {}) {
     trashedAt: null,
   });
   // Tạo sẵn nội dung để mở trang offline ngay không phải chờ server
-  batch.set(contentRef(uid, ref.id), { blocks, updatedAt: serverTimestamp() });
+  batch.set(contentRef(uid, ref.id), { text, updatedAt: serverTimestamp() });
   track(batch.commit());
   return ref.id;
 }

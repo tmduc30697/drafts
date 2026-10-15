@@ -8,7 +8,9 @@ Bản chạy thật: https://tmduc30697.github.io/drafts/
 
 - Đăng nhập bắt buộc bằng Google. Đã đăng nhập thì lần sau vào thẳng, kể cả khi offline.
 - Sidebar là danh sách trang phẳng: nút "+ Trang mới" ở cuối danh sách, kéo thả để đổi thứ tự (trên điện thoại: nhấn giữ rồi kéo).
-- Trang gồm tiêu đề lớn và trình soạn thảo block [BlockNote](https://www.blocknotejs.org/): gõ `/` để chèn block, kéo thả block.
+- Trang gồm tiêu đề lớn và nội dung văn bản thuần như Notepad (editor [CodeMirror](https://codemirror.net/)):
+  - Dòng bắt đầu bằng `- ` hoặc `1. ` thì Enter tự thêm `- ` hoặc số tiếp theo; Enter ở dòng trống để thoát danh sách.
+  - Gõ `/` để chèn khối code (có tô màu cú pháp theo ngôn ngữ).
 - Tự lưu sau 1.5 giây ngừng gõ, và lưu ngay khi rời trang hoặc ẩn app.
 - Thùng rác: khôi phục hoặc xóa vĩnh viễn.
 - Tìm trang theo tiêu đề bằng `⌘K` / `Ctrl+K`, hoặc nút kính lúp trên điện thoại.
@@ -56,12 +58,12 @@ App chạy được trên gói Spark miễn phí: không dùng Cloud Functions, 
 | Đường dẫn | Nội dung |
 | --- | --- |
 | `users/{uid}/pages/{pageId}` | Metadata: `title, parentId (luôn null, dành cho phân cấp sau này), order, createdAt, updatedAt, trashedAt`. Sidebar chỉ nghe collection này. |
-| `users/{uid}/contents/{pageId}` | `blocks` (chuỗi JSON của BlockNote) và `updatedAt`. Chỉ tải khi mở trang. |
+| `users/{uid}/contents/{pageId}` | `text` (văn bản thuần, khối code viết dạng Markdown ` ``` `) và `updatedAt`. Chỉ tải khi mở trang. Trang cũ dạng `blocks` (JSON BlockNote) được tự chuyển sang văn bản khi mở. |
 | `users/{uid}/meta/settings` | `onboarded: true` khi đã tạo trang "Bắt đầu". |
 
 Ghi chú:
 
-- Mỗi document tối đa 1 MB, nên app tắt upload ảnh (vẫn chèn ảnh bằng link được) và bỏ ảnh base64 trước khi lưu.
+- Mỗi document tối đa 1 MB: trang vượt quá sẽ không lưu và hiện cảnh báo.
 - Gói miễn phí có 20k lượt ghi/ngày, nên app không ghi theo từng phím gõ mà gom lại sau 1.5 giây.
 - Hai máy cùng sửa một trang thì bản lưu sau thắng. Nhưng khi editor đang có thay đổi chưa lưu, bản từ máy khác không được ghi đè lên.
 - Trang mở gần nhất lưu riêng trên từng máy (localStorage).
@@ -95,7 +97,8 @@ src/
   firebase.js                  Khởi tạo Auth và Firestore (cache offline nhiều tab)
   data/
     pages.js                   Tạo/sửa/đổi thứ tự trang (writeBatch), thùng rác
-    contents.js                Lưu nội dung trang
+    contents.js                Lưu/đọc nội dung trang (văn bản thuần)
+    legacyBlocks.js            Chuyển nội dung dạng block cũ sang văn bản
     tree.js                    Hàm thuần: sắp xếp danh sách, tính thứ tự khi kéo thả, chuẩn hóa chữ để tìm kiếm
     onboarding.js              Trang "Bắt đầu" cho tài khoản mới
     syncStatus.js              Theo dõi lỗi đồng bộ
@@ -105,7 +108,7 @@ src/
     LoginScreen.jsx            Màn hình đăng nhập Google
     Workspace.jsx              Khung chính: sidebar, thanh trên, nội dung
     Sidebar/                   Sidebar, danh sách trang, kéo thả (dnd-kit)
-    PageView/                  Tiêu đề, editor BlockNote
+    PageView/                  Tiêu đề, editor văn bản (CodeMirror: danh sách, menu /, khối code)
     TrashView.jsx              Thùng rác
     SearchDialog.jsx           Tìm kiếm
     SyncIndicator.jsx          Biểu tượng offline/lỗi đồng bộ
