@@ -92,55 +92,165 @@
   color: var(--text-faint);
 }
 
-/* Khối code: nền xám, font monospace, bo góc ở dòng đầu/cuối */
+/* Khối code kiểu Notion: nền xám, font monospace, thanh tiêu đề thay cho dòng ```,
+   dòng ``` đóng được ẩn (chỉ còn khoảng đệm dưới) */
 .text-editor .cm-codeblock {
   background: var(--bg-code);
   font-family: ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
   font-size: 14px;
-  padding: 0 14px;
+  line-height: 1.55;
+  padding: 0 16px;
 }
 
+/* Lưu ý: CodeMirror không cho dùng margin trên dòng (sai phép đo), chỉ dùng padding */
 .text-editor .cm-codeblock-begin {
+  padding-top: 6px;
+  padding-bottom: 2px;
   border-top-left-radius: 6px;
   border-top-right-radius: 6px;
-  padding-top: 6px;
-  color: var(--text-faint);
 }
 
 .text-editor .cm-codeblock-end {
+  height: 12px;
+  line-height: 0;
+  font-size: 0;
   border-bottom-left-radius: 6px;
   border-bottom-right-radius: 6px;
-  padding-bottom: 6px;
+}
+
+/* Khối chưa có dòng đóng ```: vẫn bo góc dưới */
+.text-editor .cm-codeblock-last {
+  padding-bottom: 14px;
+  border-bottom-left-radius: 6px;
+  border-bottom-right-radius: 6px;
+}
+
+/* inline-flex rộng 100%: nằm gọn trên một dòng của CodeMirror */
+.cm-codeblock-header {
+  display: inline-flex;
+  width: 100%;
+  vertical-align: middle;
+  align-items: center;
+  gap: 2px;
+  font-family: var(--font);
+}
+
+.cm-codeblock-spacer {
+  flex: 1;
+}
+
+.cm-codeblock-lang {
+  appearance: none;
+  -webkit-appearance: none;
+  margin-left: -6px;
+  padding: 2px 6px;
+  border: none;
+  border-radius: 4px;
+  background: transparent;
+  color: var(--text-muted);
+  font: 12px var(--font);
+  cursor: pointer;
+}
+
+.cm-codeblock-lang:hover,
+.cm-codeblock-lang:focus-visible {
+  background: var(--bg-hover);
+  outline: none;
+}
+
+.cm-codeblock-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 4px;
   color: var(--text-faint);
 }
 
-/* Menu "/" chọn khối code */
-.cm-tooltip.cm-tooltip-autocomplete {
+.cm-codeblock-btn:hover {
+  background: var(--bg-hover);
+  color: var(--text-muted);
+}
+
+.cm-codeblock-btn.done {
+  color: var(--accent);
+}
+
+/* Menu "/" kiểu Notion */
+.cm-tooltip.cm-tooltip-autocomplete.slash-menu {
   border: none;
   border-radius: 10px;
   background: var(--bg-elevated);
   box-shadow: var(--shadow);
   overflow: hidden;
-  font-family: var(--font);
 }
 
-.cm-tooltip.cm-tooltip-autocomplete > ul {
-  max-height: 280px;
+.cm-tooltip.cm-tooltip-autocomplete.slash-menu > ul {
+  min-width: 240px;
+  max-height: 300px;
   padding: 4px;
-  font-family: var(--font);
+  font-family: var(--font) !important;
 }
 
-.cm-tooltip.cm-tooltip-autocomplete > ul > li {
-  padding: 6px 10px;
+.cm-tooltip.cm-tooltip-autocomplete.slash-menu > ul::before {
+  content: 'Chèn';
+  display: block;
+  padding: 6px 8px 4px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-faint);
+}
+
+.cm-tooltip.cm-tooltip-autocomplete.slash-menu > ul > li {
+  padding: 4px 6px;
   border-radius: 6px;
   color: var(--text);
-  font-size: 14px;
-  line-height: 1.4;
 }
 
-.cm-tooltip.cm-tooltip-autocomplete > ul > li[aria-selected] {
-  background: var(--bg-active);
+.cm-tooltip.cm-tooltip-autocomplete.slash-menu > ul > li[aria-selected] {
+  background: var(--bg-hover);
   color: var(--text);
+}
+
+/* Ẩn nhãn/chi tiết mặc định, dùng giao diện tự dựng */
+.slash-menu .cm-completionLabel,
+.slash-menu .cm-completionDetail {
+  display: none;
+}
+
+.slash-option {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.slash-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  flex-shrink: 0;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--bg);
+  color: var(--text-muted);
+}
+
+.slash-text {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.3;
+}
+
+.slash-name {
+  font-size: 14px;
+}
+
+.slash-desc {
+  font-size: 12px;
+  color: var(--text-muted);
 }
 
 .link-btn {

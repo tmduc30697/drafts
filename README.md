@@ -11,7 +11,7 @@ Bản chạy thật: https://tmduc30697.github.io/drafts/
 - Trang gồm tiêu đề lớn và nội dung văn bản thuần như Notepad (editor [CodeMirror](https://codemirror.net/)):
   - Dòng bắt đầu bằng `- ` hoặc `1. ` thì Enter tự thêm `- ` hoặc số tiếp theo; Enter ở dòng trống để thoát danh sách.
   - Danh sách số tự đánh lại khi xóa/chèn dòng.
-  - Gõ `/` để chèn khối code (có tô màu cú pháp theo ngôn ngữ).
+  - Gõ `/` → chọn **Code** để chèn khối code kiểu Notion: thanh tiêu đề có dropdown chọn ngôn ngữ (mặc định Plain text), nút sao chép và xóa khối; có tô màu cú pháp.
 - Tự lưu sau 1.5 giây ngừng gõ, và lưu ngay khi rời trang hoặc ẩn app.
 - Xóa trang bằng nút thùng rác cạnh tên trang: có hỏi xác nhận, xóa là xóa vĩnh viễn (không có thùng rác).
 - Dùng được khi offline. Có mạng lại thì tự đồng bộ. Chỉ khi offline hoặc lỗi đồng bộ mới hiện biểu tượng đám mây gạch chéo.

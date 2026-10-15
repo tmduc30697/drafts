@@ -4,7 +4,7 @@ import { HighlightStyle, syntaxHighlighting } from '@codemirror/language';
 import { markdown, insertNewlineContinueMarkupCommand, deleteMarkupBackward } from '@codemirror/lang-markdown';
 import { languages } from '@codemirror/language-data';
 import { tags as t } from '@lezer/highlight';
-import { codeBlockBackground } from './codeBlocks.js';
+import { codeBlocks } from './codeBlocks.js';
 import { slashMenu } from './slashMenu.js';
 import { renumberLists } from './renumberLists.js';
 
@@ -37,7 +37,7 @@ export function editorExtensions({ onDocChange }) {
     EditorView.lineWrapping,
     markdown({ codeLanguages: languages, addKeymap: false }),
     syntaxHighlighting(codeHighlight),
-    codeBlockBackground,
+    codeBlocks,
     renumberLists,
     slashMenu,
     listKeymap,
