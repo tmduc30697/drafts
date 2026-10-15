@@ -4,10 +4,11 @@ import { goHome, goToPage, useHashRoute } from '../hooks/useHashRoute.js';
 import { buildTree, pathOf, UNTITLED } from '../data/tree.js';
 import { createPage, trashPage } from '../data/pages.js';
 import { loadJSON, saveJSON } from '../lib/storage.js';
-import { MenuIcon, MoreIcon, PlusIcon, TrashIcon } from './icons.jsx';
+import { MenuIcon, MoreIcon, PlusIcon, SearchIcon, TrashIcon } from './icons.jsx';
 import Menu from './Menu.jsx';
 import Sidebar from './Sidebar/Sidebar.jsx';
 import TrashView from './TrashView.jsx';
+import SearchDialog from './SearchDialog.jsx';
 
 // BlockNote khá nặng: tách thành chunk riêng để màn hình đăng nhập và sidebar hiện nhanh
 const PageView = lazy(() => import('./PageView/PageView.jsx'));
@@ -93,6 +94,19 @@ export default function Workspace({ user }) {
     [currentId, expanded, liveTitles, updateExpanded, uid, pages, tree],
   );
 
+  // Cmd/Ctrl+K mở tìm kiếm (bắt ở pha capture để thắng phím tắt của editor)
+  useEffect(() => {
+    const onKey = (e) => {
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') {
+        e.preventDefault();
+        e.stopPropagation();
+        setSearchOpen((o) => !o);
+      }
+    };
+    window.addEventListener('keydown', onKey, true);
+    return () => window.removeEventListener('keydown', onKey, true);
+  }, []);
+
   const setLiveTitle = useCallback((id, title) => {
     setLiveTitles((m) => (title == null ? omit(m, id) : { ...m, [id]: title }));
   }, []);
@@ -121,6 +135,7 @@ export default function Workspace({ user }) {
           ctx={ctx}
           currentPage={currentPage}
           onOpenDrawer={() => setDrawerOpen(true)}
+          onOpenSearch={() => setSearchOpen(true)}
         />
         <div className="content">
           {!loaded ? null : currentPage ? (
@@ -141,6 +156,7 @@ export default function Workspace({ user }) {
           ) : null}
         </div>
       </main>
+      {searchOpen && <SearchDialog tree={tree} titleOf={ctx.titleOf} onClose={() => setSearchOpen(false)} />}
     </div>
   );
 }
@@ -151,7 +167,7 @@ function omit(obj, key) {
 }
 
 // Thanh trên cùng: nút mở drawer (điện thoại), breadcrumb, menu trang
-function Topbar({ path, title, ctx, currentPage, onOpenDrawer }) {
+function Topbar({ path, title, ctx, currentPage, onOpenDrawer, onOpenSearch }) {
   const [menu, setMenu] = useState(null);
   return (
     <header className="topbar">
@@ -171,6 +187,9 @@ function Topbar({ path, title, ctx, currentPage, onOpenDrawer }) {
         ))}
       </div>
       <div className="topbar-actions">
+        <button className="icon-btn mobile-only" aria-label="Tìm kiếm" onClick={onOpenSearch}>
+          <SearchIcon />
+        </button>
         {currentPage && (
           <button className="icon-btn" aria-label="Tùy chọn trang" onClick={(e) => setMenu(menu ? null : e.currentTarget)}>
             <MoreIcon />
