@@ -6,6 +6,7 @@ import { languages } from '@codemirror/language-data';
 import { tags as t } from '@lezer/highlight';
 import { codeBlockBackground } from './codeBlocks.js';
 import { slashMenu } from './slashMenu.js';
+import { renumberLists } from './renumberLists.js';
 
 // Enter ở dòng "- ..." / "1. ..." tự thêm "- " / số tiếp theo; dòng gạch đầu dòng trống thì thoát danh sách.
 // Không tự chèn dòng trống giữa các mục (giữ danh sách liền nhau như Notepad).
@@ -37,6 +38,7 @@ export function editorExtensions({ onDocChange }) {
     markdown({ codeLanguages: languages, addKeymap: false }),
     syntaxHighlighting(codeHighlight),
     codeBlockBackground,
+    renumberLists,
     slashMenu,
     listKeymap,
     keymap.of([...defaultKeymap, ...historyKeymap, indentWithTab]),

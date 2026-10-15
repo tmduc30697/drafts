@@ -10,10 +10,10 @@ Bản chạy thật: https://tmduc30697.github.io/drafts/
 - Sidebar là danh sách trang phẳng: nút "+ Trang mới" ở cuối danh sách, kéo thả để đổi thứ tự (trên điện thoại: nhấn giữ rồi kéo).
 - Trang gồm tiêu đề lớn và nội dung văn bản thuần như Notepad (editor [CodeMirror](https://codemirror.net/)):
   - Dòng bắt đầu bằng `- ` hoặc `1. ` thì Enter tự thêm `- ` hoặc số tiếp theo; Enter ở dòng trống để thoát danh sách.
+  - Danh sách số tự đánh lại khi xóa/chèn dòng.
   - Gõ `/` để chèn khối code (có tô màu cú pháp theo ngôn ngữ).
 - Tự lưu sau 1.5 giây ngừng gõ, và lưu ngay khi rời trang hoặc ẩn app.
-- Thùng rác: khôi phục hoặc xóa vĩnh viễn.
-- Tìm trang theo tiêu đề bằng `⌘K` / `Ctrl+K`, hoặc nút kính lúp trên điện thoại.
+- Xóa trang bằng nút thùng rác cạnh tên trang: có hỏi xác nhận, xóa là xóa vĩnh viễn (không có thùng rác).
 - Dùng được khi offline. Có mạng lại thì tự đồng bộ. Chỉ khi offline hoặc lỗi đồng bộ mới hiện biểu tượng đám mây gạch chéo.
 - Khi có bản mới, app hiện snackbar "Có bản mới — Cập nhật" và chỉ tải lại khi bạn bấm.
 
@@ -57,7 +57,7 @@ App chạy được trên gói Spark miễn phí: không dùng Cloud Functions, 
 
 | Đường dẫn | Nội dung |
 | --- | --- |
-| `users/{uid}/pages/{pageId}` | Metadata: `title, parentId (luôn null, dành cho phân cấp sau này), order, createdAt, updatedAt, trashedAt`. Sidebar chỉ nghe collection này. |
+| `users/{uid}/pages/{pageId}` | Metadata: `title, parentId (luôn null, dành cho phân cấp sau này), order, createdAt, updatedAt`. Sidebar chỉ nghe collection này. |
 | `users/{uid}/contents/{pageId}` | `text` (văn bản thuần, khối code viết dạng Markdown ` ``` `) và `updatedAt`. Chỉ tải khi mở trang. Trang cũ dạng `blocks` (JSON BlockNote) được tự chuyển sang văn bản khi mở. |
 | `users/{uid}/meta/settings` | `onboarded: true` khi đã tạo trang "Bắt đầu". |
 
@@ -74,7 +74,7 @@ Mỗi lần push lên `main`, GitHub Actions (`.github/workflows/deploy.yml`) bu
 
 Thiết lập một lần: **GitHub repo → Settings → Pages → Source:** chọn **GitHub Actions**.
 
-Vite dùng `base: '/drafts/'` cho khớp với đường dẫn trên GitHub Pages. App điều hướng bằng hash (`#/p/<id>`, `#/trash`) nên GitHub Pages không cần cấu hình rewrite.
+Vite dùng `base: '/drafts/'` cho khớp với đường dẫn trên GitHub Pages. App điều hướng bằng hash (`#/p/<id>`) nên GitHub Pages không cần cấu hình rewrite.
 
 ## Icon
 
@@ -109,8 +109,6 @@ src/
     Workspace.jsx              Khung chính: sidebar, thanh trên, nội dung
     Sidebar/                   Sidebar, danh sách trang, kéo thả (dnd-kit)
     PageView/                  Tiêu đề, editor văn bản (CodeMirror: danh sách, menu /, khối code)
-    TrashView.jsx              Thùng rác
-    SearchDialog.jsx           Tìm kiếm
     SyncIndicator.jsx          Biểu tượng offline/lỗi đồng bộ
     UpdateSnackbar.jsx         Báo có bản mới
   styles/                      CSS (biến màu sáng/tối theo hệ thống)

@@ -1,6 +1,4 @@
-import { useState } from 'react';
-import { DocIcon, MoreIcon, TrashIcon } from '../icons.jsx';
-import Menu from '../Menu.jsx';
+import { DocIcon, TrashIcon } from '../icons.jsx';
 import { UNTITLED } from '../../data/tree.js';
 import { useListRowDnd } from './ListDnd.jsx';
 
@@ -10,7 +8,6 @@ export default function PageList({ list, ctx }) {
 }
 
 function PageRow({ page, ctx }) {
-  const [menuAnchor, setMenuAnchor] = useState(null);
   const active = ctx.currentId === page.id;
   const title = ctx.titleOf(page);
   const dnd = useListRowDnd(page.id);
@@ -19,38 +16,21 @@ function PageRow({ page, ctx }) {
     <div
       ref={dnd.setRef}
       {...dnd.dragProps}
-      className={[
-        'tree-row',
-        active && 'active',
-        menuAnchor && 'menu-open',
-        dnd.isDragging && 'dragging',
-        dnd.dropPos && `drop-${dnd.dropPos}`,
-      ]
+      className={['tree-row', active && 'active', dnd.isDragging && 'dragging', dnd.dropPos && `drop-${dnd.dropPos}`]
         .filter(Boolean)
         .join(' ')}
     >
       <a className="tree-link" href={`#/p/${page.id}`} onClick={ctx.onNavigate} draggable={false}>
-        <span className="tree-icon"><DocIcon size={16} /></span>
+        <span className="tree-icon">
+          <DocIcon size={16} />
+        </span>
         <span className={`tree-title ${title ? '' : 'untitled'}`}>{title || UNTITLED}</span>
       </a>
       <div className="tree-actions">
-        <button
-          className="icon-btn small"
-          aria-label="Tùy chọn"
-          onClick={(e) => setMenuAnchor(menuAnchor ? null : e.currentTarget)}
-        >
-          <MoreIcon size={16} />
+        <button className="icon-btn small danger" aria-label="Xóa trang" title="Xóa trang" onClick={() => ctx.onDelete(page)}>
+          <TrashIcon size={15} />
         </button>
       </div>
-      {menuAnchor && (
-        <Menu
-          anchor={menuAnchor}
-          onClose={() => setMenuAnchor(null)}
-          items={[
-            { label: 'Chuyển vào thùng rác', icon: <TrashIcon size={16} />, danger: true, onClick: () => ctx.onTrash(page.id) },
-          ]}
-        />
-      )}
     </div>
   );
 }

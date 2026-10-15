@@ -122,12 +122,13 @@
   padding: 8px 6px 12px;
 }
 
+/* Tài khoản ở dưới cùng sidebar */
 .sidebar-user {
   display: flex;
   align-items: center;
   gap: 8px;
   padding: 6px 8px;
-  margin-bottom: 4px;
+  margin-top: 12px;
   border-radius: 6px;
   text-align: left;
   font-weight: 600;
@@ -179,15 +180,8 @@
   background: var(--bg-hover);
 }
 
-.sidebar-kbd {
-  margin-left: auto;
-  font-family: inherit;
-  font-size: 11px;
-  color: var(--text-faint);
-}
-
 .sidebar-section {
-  margin: 14px 10px 4px;
+  margin: 6px 10px 4px;
   font-size: 12px;
   font-weight: 600;
   color: var(--text-faint);
@@ -195,10 +189,6 @@
 
 .sidebar-tree {
   flex: 1;
-}
-
-.sidebar-trash {
-  margin-top: 12px;
 }
 
 /* Hàng trong danh sách trang */
@@ -354,104 +344,6 @@
   box-shadow: var(--shadow);
   font-size: 14px;
   cursor: grabbing;
-}
-
-/* Hộp tìm kiếm */
-.search-backdrop {
-  position: fixed;
-  inset: 0;
-  z-index: 50;
-  display: flex;
-  justify-content: center;
-  align-items: flex-start;
-  padding: 12vh 16px 16px;
-  background: rgba(0, 0, 0, 0.35);
-}
-
-.search-dialog {
-  width: 100%;
-  max-width: 620px;
-  max-height: 70vh;
-  display: flex;
-  flex-direction: column;
-  background: var(--bg-elevated);
-  border-radius: 12px;
-  box-shadow: var(--shadow);
-  overflow: hidden;
-}
-
-@media (max-width: 767px) {
-  .search-backdrop {
-    padding: 0;
-  }
-
-  .search-dialog {
-    max-width: none;
-    max-height: none;
-    height: 100%;
-    border-radius: 0;
-    padding-top: env(safe-area-inset-top);
-  }
-}
-
-.search-input-row {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 12px 16px;
-  border-bottom: 1px solid var(--border);
-  color: var(--text-muted);
-}
-
-.search-input {
-  flex: 1;
-  min-width: 0;
-  border: none;
-  outline: none;
-  background: transparent;
-  font-size: 17px;
-  color: var(--text);
-}
-
-.search-section {
-  padding: 10px 16px 4px;
-  font-size: 12px;
-  font-weight: 600;
-  color: var(--text-faint);
-}
-
-.search-results {
-  list-style: none;
-  margin: 0;
-  padding: 0 6px 8px;
-  overflow-y: auto;
-}
-
-.search-result {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  width: 100%;
-  padding: 8px 10px;
-  border-radius: 6px;
-  text-align: left;
-}
-
-.search-result.selected {
-  background: var(--bg-hover);
-}
-
-.search-title {
-  min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.search-empty {
-  padding: 12px 10px;
-  color: var(--text-muted);
-  font-size: 14px;
 }
 
 /* Biểu tượng mất đồng bộ */

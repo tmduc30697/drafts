@@ -154,52 +154,6 @@
   background: var(--bg-hover);
 }
 
-/* Thùng rác */
-.trash {
-  max-width: var(--content-max);
-  margin: 0 auto;
-  padding: 40px 20px 80px;
-}
-
-.trash-title {
-  font-size: 32px;
-  margin: 0 0 16px;
-}
-
-.trash-list {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-}
-
-.trash-item {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 8px;
-  border-radius: 8px;
-}
-
-.trash-item:hover {
-  background: var(--bg-hover);
-}
-
-.trash-info {
-  flex: 1;
-  min-width: 0;
-}
-
-.trash-name {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.trash-meta {
-  font-size: 12px;
-  color: var(--text-muted);
-}
-
 .icon-btn.danger:hover {
   color: var(--danger);
 }

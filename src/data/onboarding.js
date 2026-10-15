@@ -20,10 +20,9 @@ console.log('xin chào');
 Sắp xếp trang
 - Bấm "+ Trang mới" ở cuối danh sách để tạo trang.
 - Kéo thả trang trong sidebar để đổi thứ tự (điện thoại: nhấn giữ rồi kéo).
-- Xóa trang sẽ chuyển vào Thùng rác, có thể khôi phục lại.
+- Bấm biểu tượng thùng rác cạnh tên trang để xóa (xóa vĩnh viễn, có hỏi lại trước).
 
 Mẹo
-- Nhấn ⌘K (hoặc Ctrl+K) để tìm trang theo tiêu đề.
 - Thêm Drafts vào màn hình chính iPhone: Safari → Chia sẻ → Thêm vào MH chính.
 - Mất mạng vẫn ghi được; có mạng lại sẽ tự đồng bộ.`;
 
@@ -47,7 +46,6 @@ export async function ensureOnboarding(uid, pages) {
     order: nextOrder(pages),
     createdAt: serverTimestamp(),
     updatedAt: serverTimestamp(),
-    trashedAt: null,
   });
   batch.set(contentRef(uid, ref.id), { text: GUIDE, updatedAt: serverTimestamp() });
   batch.set(metaRef(uid), { onboarded: true }, { merge: true });

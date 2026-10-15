@@ -23,22 +23,9 @@ export const PlusIcon = (p) => (
     <path d="M12 5v14M5 12h14" />
   </Svg>
 );
-export const MoreIcon = (p) => (
-  <Svg {...p}>
-    <circle cx="5" cy="12" r="1" fill="currentColor" />
-    <circle cx="12" cy="12" r="1" fill="currentColor" />
-    <circle cx="19" cy="12" r="1" fill="currentColor" />
-  </Svg>
-);
 export const TrashIcon = (p) => (
   <Svg {...p}>
     <path d="M4 7h16M10 11v6M14 11v6M6 7l1 12a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2l1-12M9 7V4h6v3" />
-  </Svg>
-);
-export const SearchIcon = (p) => (
-  <Svg {...p}>
-    <circle cx="11" cy="11" r="7" />
-    <path d="M20 20l-3.5-3.5" />
   </Svg>
 );
 export const MenuIcon = (p) => (
@@ -61,11 +48,6 @@ export const RestoreIcon = (p) => (
   <Svg {...p}>
     <path d="M4 12a8 8 0 1 0 2.3-5.7L4 8.6" />
     <path d="M4 4v4.6h4.6" />
-  </Svg>
-);
-export const CloseIcon = (p) => (
-  <Svg {...p}>
-    <path d="M6 6l12 12M18 6L6 18" />
   </Svg>
 );
 export const LogoutIcon = (p) => (

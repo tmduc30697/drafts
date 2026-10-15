@@ -2,7 +2,6 @@ import {
   collection,
   doc,
   serverTimestamp,
-  Timestamp,
   updateDoc,
   writeBatch,
 } from 'firebase/firestore';
@@ -44,7 +43,6 @@ export function createPage(uid, pages, { title = '', text = '' } = {}) {
     order: nextOrder(pages),
     createdAt: serverTimestamp(),
     updatedAt: serverTimestamp(),
-    trashedAt: null,
   });
   // Tạo sẵn nội dung để mở trang offline ngay không phải chờ server
   batch.set(contentRef(uid, ref.id), { text, updatedAt: serverTimestamp() });
@@ -64,18 +62,8 @@ export function reorderPages(uid, orders) {
   );
 }
 
-// Đưa trang vào thùng rác
-export function trashPage(uid, id) {
-  return track(updateDoc(pageRef(uid, id), { trashedAt: Timestamp.now() }));
-}
-
-// Khôi phục trang về đúng vị trí cũ trong danh sách
-export function restorePage(uid, id) {
-  return track(updateDoc(pageRef(uid, id), { trashedAt: null }));
-}
-
 // Xóa vĩnh viễn trang và nội dung của nó
-export function deletePageForever(uid, id) {
+export function deletePage(uid, id) {
   const batch = writeBatch(db);
   batch.delete(pageRef(uid, id));
   batch.delete(contentRef(uid, id));

@@ -5,8 +5,9 @@ function byOrder(a, b) {
   return a.order - b.order || a.createdAt - b.createdAt;
 }
 
-// Danh sách trang chưa xóa, đã sắp xếp, kèm tra cứu theo id
+// Danh sách trang đã sắp xếp, kèm tra cứu theo id
 export function buildList(pages) {
+  // Trang có trashedAt là trang đã vào thùng rác ở bản cũ (đã bỏ thùng rác): ẩn đi
   const list = pages.filter((p) => !p.trashedAt).sort(byOrder);
   return { list, byId: new Map(list.map((p) => [p.id, p])) };
 }
@@ -36,16 +37,6 @@ export function computeMove(list, activeId, targetId, pos) {
     return ordered.map((id, i) => ({ id, order: i + 1 }));
   }
   return [{ id: activeId, order }];
-}
-
-// Bỏ dấu tiếng Việt + chữ thường để tìm kiếm không phân biệt dấu
-export function normalizeText(s) {
-  return (s || '')
-    .normalize('NFD')
-    .replace(/[̀-ͯ]/g, '')
-    .replace(/đ/g, 'd')
-    .replace(/Đ/g, 'D')
-    .toLowerCase();
 }
 
 export const UNTITLED = 'Không có tiêu đề';
