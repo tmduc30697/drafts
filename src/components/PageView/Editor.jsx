@@ -5,12 +5,12 @@ import { EditorView } from '@codemirror/view';
 import { contentRef } from '../../data/pages.js';
 import { contentText, MAX_CONTENT_BYTES, saveContent } from '../../data/contents.js';
 import { useDebouncedSaver } from '../../hooks/useDebouncedSaver.js';
-import { editorExtensions } from './editor/setup.js';
+import { editorExtensions, setLocked } from './editor/setup.js';
 
 const byteLength = (s) => new TextEncoder().encode(s).length;
 
 // Tải nội dung trang rồi mới dựng editor
-export default function Editor({ uid, pageId, onReady }) {
+export default function Editor({ uid, pageId, onReady, locked = false }) {
   const [initial, setInitial] = useState(null); // { text } | { missing: true } | { error: true }
   // Hàm xử lý snapshot của editor đã dựng; trước khi nó gắn vào thì giữ snapshot mới nhất ở pending
   const snapshotHandler = useRef({ handle: null, pending: null });
@@ -58,11 +58,12 @@ export default function Editor({ uid, pageId, onReady }) {
       initialText={initial.text}
       snapshotHandler={snapshotHandler}
       onReady={onReady}
+      locked={locked}
     />
   );
 }
 
-function LoadedEditor({ uid, pageId, initialText, snapshotHandler, onReady }) {
+function LoadedEditor({ uid, pageId, initialText, snapshotHandler, onReady, locked }) {
   const host = useRef(null);
   const viewRef = useRef(null);
   const [tooLarge, setTooLarge] = useState(false);
@@ -90,6 +91,7 @@ function LoadedEditor({ uid, pageId, initialText, snapshotHandler, onReady }) {
       state: EditorState.create({
         doc: initialText,
         extensions: editorExtensions({
+          locked,
           onDocChange: (u) => {
             // Bỏ qua thay đổi do áp bản từ máy khác
             if (!u.transactions.some((tr) => tr.annotation(Transaction.remote))) saver.schedule();
@@ -106,6 +108,11 @@ function LoadedEditor({ uid, pageId, initialText, snapshotHandler, onReady }) {
     // initialText chỉ dùng lúc dựng; saver/onReady ổn định
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // Khóa/mở khóa trang khi đang mở
+  useEffect(() => {
+    if (viewRef.current) setLocked(viewRef.current, locked);
+  }, [locked]);
 
   // Nhận bản mới từ máy khác. Chỉ áp vào editor khi KHÔNG có thay đổi chưa lưu,
   // để không ghi đè những gì đang gõ ("lưu sau thắng" khi cả hai cùng sửa).

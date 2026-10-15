@@ -1,6 +1,6 @@
 import { syntaxTree } from '@codemirror/language';
 import { Decoration, EditorView, ViewPlugin, WidgetType } from '@codemirror/view';
-import { CopyIcon, TrashIcon } from './editorIcons.js';
+import { CopyIcon, CloseIcon } from './editorIcons.js';
 
 // Khối code kiểu Notion. Trong văn bản vẫn lưu dạng Markdown:
 //   ```python
@@ -97,6 +97,10 @@ class CodeHeaderWidget extends WidgetType {
       select.appendChild(opt);
     }
     select.addEventListener('change', () => {
+      if (view.state.readOnly) {
+        select.value = this.lang;
+        return;
+      }
       const line = view.state.doc.lineAt(view.posAtDOM(wrap));
       const m = FENCE_OPEN.exec(line.text);
       if (!m) return;
@@ -119,7 +123,8 @@ class CodeHeaderWidget extends WidgetType {
       setTimeout(() => copy.classList.remove('done'), 1200);
     });
 
-    const remove = button('cm-codeblock-btn', 'Xóa khối code', TrashIcon, () => {
+    const remove = button('cm-codeblock-btn', 'Xóa khối code', CloseIcon, () => {
+      if (view.state.readOnly) return;
       const node = fencedCodeAt(view.state, view.posAtDOM(wrap));
       if (!node) return;
       const { doc } = view.state;

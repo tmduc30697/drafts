@@ -7,8 +7,6 @@ let queue = Promise.resolve();
 let counter = 0;
 const cache = new Map(); // `${theme}\n${code}` -> svg
 
-const isDark = () => window.matchMedia('(prefers-color-scheme: dark)').matches;
-
 function loadMermaid() {
   if (!mermaidPromise) mermaidPromise = import('mermaid').then((m) => m.default);
   return mermaidPromise;
@@ -16,7 +14,7 @@ function loadMermaid() {
 
 // Trả về { svg } hoặc { error } (cú pháp sai...)
 export function renderMermaid(code) {
-  const theme = isDark() ? 'dark' : 'default';
+  const theme = 'default';
   const key = `${theme}\n${code}`;
   if (cache.has(key)) return Promise.resolve({ svg: cache.get(key) });
 

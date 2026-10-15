@@ -3,7 +3,7 @@ import { Decoration, EditorView, WidgetType } from '@codemirror/view';
 import { syntaxTree } from '@codemirror/language';
 import { renderMermaid } from './mermaid.js';
 import { openMermaidDialog } from './mermaidDialog.js';
-import { EditIcon, TrashIcon } from './editorIcons.js';
+import { EditIcon, CloseIcon } from './editorIcons.js';
 
 // Khối ```mermaid ... ``` (đã đóng) được thay bằng sơ đồ đã render.
 // Bấm vào sơ đồ hoặc nút Sửa để mở popup sửa code; nút Xóa để bỏ cả khối.
@@ -69,6 +69,7 @@ class MermaidWidget extends WidgetType {
     wrap.className = 'cm-mermaid';
 
     const edit = () => {
+      if (view.state.readOnly) return;
       const block = blockAt(view.state, view.posAtDOM(wrap));
       if (!block) return;
       openMermaidDialog({
@@ -84,6 +85,7 @@ class MermaidWidget extends WidgetType {
       });
     };
     const remove = () => {
+      if (view.state.readOnly) return;
       const block = blockAt(view.state, view.posAtDOM(wrap));
       if (!block) return;
       const { doc } = view.state;
@@ -101,7 +103,7 @@ class MermaidWidget extends WidgetType {
     label.textContent = 'Mermaid';
     const spacer = document.createElement('span');
     spacer.className = 'cm-codeblock-spacer';
-    toolbar.append(label, spacer, toolButton('Sửa sơ đồ', EditIcon, edit), toolButton('Xóa sơ đồ', TrashIcon, remove));
+    toolbar.append(label, spacer, toolButton('Sửa sơ đồ', EditIcon, edit), toolButton('Xóa sơ đồ', CloseIcon, remove));
 
     const diagram = document.createElement('div');
     diagram.className = 'cm-mermaid-diagram';
@@ -125,7 +127,17 @@ class MermaidWidget extends WidgetType {
     });
 
     wrap.append(toolbar, diagram);
+
+    // Chiều cao sơ đồ còn đổi sau khi vẽ (font tải xong, svg co giãn...): đo lại để số hàng và các dòng bên dưới không lệch
+    if (typeof ResizeObserver !== 'undefined') {
+      this.observer = new ResizeObserver(() => view.requestMeasure());
+      this.observer.observe(wrap);
+    }
     return wrap;
+  }
+
+  destroy() {
+    this.observer?.disconnect();
   }
 
   // Nút/sơ đồ tự xử lý chuột, editor không can thiệp
@@ -156,7 +168,7 @@ export const mermaidBlocks = StateField.define({
   ],
 });
 
-// Chèn khối mermaid mới tại vị trí pos (dùng cho menu "/")
+// Chèn khối mermaid mới tại vị trí pos (dùng cho nút Mermaid trên thanh công cụ)
 export function insertMermaidBlock(view, pos, code) {
   const { state } = view;
   pos = Math.min(pos, state.doc.length);

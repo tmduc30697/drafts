@@ -4,51 +4,23 @@
   --page-pad: 32px;
   max-width: calc(var(--content-max) + 2 * var(--page-pad));
   margin: 0 auto;
-  padding: 48px 0 30vh;
+  padding: 0 0 30vh;
 }
 
 @media (max-width: 767px) {
   .page {
     --page-pad: 20px;
-    padding-top: 16px;
   }
-}
 
-.page-header {
-  padding: 0 var(--page-pad);
-  padding-left: calc(var(--page-pad) + env(safe-area-inset-left));
-  padding-right: calc(var(--page-pad) + env(safe-area-inset-right));
-}
-
-.page-title {
-  display: block;
-  width: 100%;
-  margin: 8px 0 12px;
-  padding: 0;
-  border: none;
-  outline: none;
-  resize: none;
-  overflow: hidden;
-  background: transparent;
-  font-size: 40px;
-  font-weight: 700;
-  line-height: 1.2;
-}
-
-@media (max-width: 767px) {
-  .page-title {
-    font-size: 30px;
+  .text-editor .cm-content {
+    padding-top: 0;
   }
-}
-
-.page-title::placeholder {
-  color: var(--text-faint);
 }
 
 .editor-note {
   padding: 0 var(--page-pad);
   color: var(--text-muted);
-  font-size: 14px;
+  font-size: var(--fs);
 }
 
 .editor-note.error {
@@ -65,7 +37,10 @@
 .text-editor .cm-editor {
   background: transparent;
   color: var(--text);
-  font-size: 16px;
+  /* Cỡ chữ chỉnh được ở thanh công cụ; chiều cao dòng luôn = 1.65 × cỡ chữ */
+  --editor-fs: var(--fs);
+  --editor-lh: calc(var(--editor-fs) * 1.65);
+  font-size: var(--editor-fs);
 }
 
 .text-editor .cm-editor.cm-focused {
@@ -80,7 +55,9 @@
 
 .text-editor .cm-content {
   min-height: 50vh; /* bấm vào vùng trống bên dưới vẫn đặt được con trỏ */
-  padding: 0 0 4px;
+  /* chừa chỗ cuối để cuộn dòng cuối lên đầu trang như Sublime Text */
+  padding: 0 0 calc(100vh - 70px);
+  padding-bottom: var(--end-pad, calc(100vh - 70px)); /* Toolbar.jsx đo và đặt: vùng nhìn thấy trừ một dòng */
   caret-color: var(--text);
 }
 
@@ -97,21 +74,22 @@
 .text-editor .cm-codeblock {
   background: var(--bg-code);
   font-family: ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
-  font-size: 14px;
-  line-height: 1.55;
+  font-size: var(--editor-fs);
+  line-height: var(--editor-lh); /* bằng đúng một dòng chữ thường để số hàng cách đều */
   padding: 0 16px;
 }
 
 /* Lưu ý: CodeMirror không cho dùng margin trên dòng (sai phép đo), chỉ dùng padding */
 .text-editor .cm-codeblock-begin {
-  padding-top: 6px;
-  padding-bottom: 2px;
+  height: var(--editor-lh);
+  padding-top: 0;
+  padding-bottom: 0;
   border-top-left-radius: 6px;
   border-top-right-radius: 6px;
 }
 
 .text-editor .cm-codeblock-end {
-  height: 12px;
+  height: var(--editor-lh);
   line-height: 0;
   font-size: 0;
   border-bottom-left-radius: 6px;
@@ -120,7 +98,6 @@
 
 /* Khối chưa có dòng đóng ```: vẫn bo góc dưới */
 .text-editor .cm-codeblock-last {
-  padding-bottom: 14px;
   border-bottom-left-radius: 6px;
   border-bottom-right-radius: 6px;
 }
@@ -148,7 +125,7 @@
   border-radius: 4px;
   background: transparent;
   color: var(--text-muted);
-  font: 12px var(--font);
+  font: var(--fs) var(--font);
   cursor: pointer;
 }
 
@@ -177,84 +154,8 @@
   color: var(--accent);
 }
 
-/* Menu "/" kiểu Notion */
-.cm-tooltip.cm-tooltip-autocomplete.slash-menu {
-  border: none;
-  border-radius: 10px;
-  background: var(--bg-elevated);
-  box-shadow: var(--shadow);
-  overflow: hidden;
-}
-
-.cm-tooltip.cm-tooltip-autocomplete.slash-menu > ul {
-  min-width: 240px;
-  max-height: 300px;
-  padding: 4px;
-  font-family: var(--font) !important;
-}
-
-.cm-tooltip.cm-tooltip-autocomplete.slash-menu > ul::before {
-  content: 'Chèn';
-  display: block;
-  padding: 6px 8px 4px;
-  font-size: 12px;
-  font-weight: 600;
-  color: var(--text-faint);
-}
-
-.cm-tooltip.cm-tooltip-autocomplete.slash-menu > ul > li {
-  padding: 4px 6px;
-  border-radius: 6px;
-  color: var(--text);
-}
-
-.cm-tooltip.cm-tooltip-autocomplete.slash-menu > ul > li[aria-selected] {
-  background: var(--bg-hover);
-  color: var(--text);
-}
-
-/* Ẩn nhãn/chi tiết mặc định, dùng giao diện tự dựng */
-.slash-menu .cm-completionLabel,
-.slash-menu .cm-completionDetail {
-  display: none;
-}
-
-.slash-option {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
-.slash-icon {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 40px;
-  height: 40px;
-  flex-shrink: 0;
-  border: 1px solid var(--border);
-  border-radius: 6px;
-  background: var(--bg);
-  color: var(--text-muted);
-}
-
-.slash-text {
-  display: flex;
-  flex-direction: column;
-  line-height: 1.3;
-}
-
-.slash-name {
-  font-size: 14px;
-}
-
-.slash-desc {
-  font-size: 12px;
-  color: var(--text-muted);
-}
-
 .link-btn {
-  font-size: 13px;
+  font-size: var(--fs);
   color: var(--text-muted);
   padding: 2px 6px;
   border-radius: 4px;
@@ -264,16 +165,15 @@
   background: var(--bg-hover);
 }
 
-.icon-btn.danger:hover {
-  color: var(--danger);
-}
-
 /* Sơ đồ Mermaid trong trang */
 .cm-mermaid {
-  margin: 4px 0;
+  /* Không dùng margin: CodeMirror không đo margin của widget nên số hàng bên dưới sẽ lệch. Viền trong suốt thì được đo. */
+  border: solid transparent;
+  border-width: 4px 0;
   padding: 6px 16px 16px;
   border-radius: 6px;
   background: var(--bg-code);
+  background-clip: padding-box; /* sau shorthand background, nếu không sẽ bị đặt lại */
 }
 
 .cm-mermaid-toolbar {
@@ -284,7 +184,7 @@
 }
 
 .cm-mermaid-label {
-  font-size: 12px;
+  font-size: var(--fs);
   color: var(--text-muted);
 }
 
@@ -293,7 +193,7 @@
   justify-content: center;
   overflow-x: auto;
   cursor: pointer;
-  font-size: 13px;
+  font-size: var(--fs);
   color: var(--text-muted);
 }
 
@@ -304,13 +204,13 @@
 
 .cm-mermaid-source {
   margin: 8px 0 0;
-  font-size: 12px;
+  font-size: var(--fs);
   white-space: pre-wrap;
 }
 
 .mermaid-error {
   color: var(--danger);
-  font-size: 13px;
+  font-size: var(--fs);
 }
 
 /* Popup nhập code Mermaid */
@@ -346,7 +246,7 @@
 }
 
 .mermaid-dialog-head a {
-  font-size: 13px;
+  font-size: var(--fs);
   font-weight: 400;
   color: var(--accent);
   text-decoration: none;
@@ -359,7 +259,7 @@
   border: 1px solid var(--border);
   border-radius: 8px;
   background: var(--bg-code);
-  font: 13px/1.5 ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
+  font: var(--fs)/1.5 ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
   resize: vertical;
   outline: none;
 }
@@ -386,7 +286,7 @@
 }
 
 .mermaid-hint {
-  font-size: 13px;
+  font-size: var(--fs);
   color: var(--text-faint);
 }
 
@@ -414,4 +314,419 @@
     padding-top: calc(16px + env(safe-area-inset-top));
     padding-bottom: calc(16px + env(safe-area-inset-bottom));
   }
+}
+
+.cm-link {
+  color: var(--accent);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  cursor: pointer;
+}
+
+.cm-bold {
+  font-weight: 700;
+}
+
+.cm-italic {
+  font-style: italic;
+}
+
+.cm-underline {
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+/* Số hàng nằm trong lề trái, bên ngoài cột nội dung: editor kéo lùi ra mép lề (margin âm),
+   gutter chiếm đúng phần lùi đó, còn chữ vẫn thẳng hàng với tiêu đề.
+   (Không dùng position:absolute cho gutter vì sẽ làm các tooltip của CodeMirror bị ẩn.) */
+.text-editor .cm-editor {
+  --gw: calc(var(--page-pad) - 5px);
+  --edge: var(--page-pad);
+  margin-left: calc(-1 * var(--edge));
+}
+
+.text-editor .cm-content {
+  padding-left: calc(var(--edge) - var(--gw));
+}
+
+.cm-editor .cm-gutters {
+  width: var(--gw);
+  box-sizing: border-box;
+  background: transparent;
+  border: none;
+  color: var(--text-faint);
+}
+
+.cm-editor .cm-gutter {
+  flex: 1;
+}
+
+.cm-editor .cm-lineNumbers .cm-gutterElement {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  box-sizing: border-box;
+  font-size: 12px;
+  padding: 0 4px;
+  min-width: 0;
+  user-select: none;
+}
+
+/* Desktop: lề số hàng kiểu Sublime — dải dọc sát mép trái vùng soạn thảo, cao suốt trang,
+   có vạch kẻ ngăn với nội dung. Cột chữ dính sát dải. */
+@media (min-width: 768px) {
+  .page:has(.text-editor) {
+    margin-left: 41px;
+    margin-right: 0;
+  }
+
+  /* Tiêu đề nằm ở vùng riêng phía trên; dải lề chỉ chạy dọc theo phần nội dung và kéo dài tới cuối màn hình */
+  .page:has(.text-editor) {
+    padding-bottom: 0;
+  }
+
+  .text-editor .cm-editor {
+    --gw: 41px;
+    --edge: calc(41px + var(--page-pad));
+  }
+
+  /* Lề kiểu Sublime Text: cùng màu nền với nội dung, không đường ranh giới. Khoảng cách giữa số và chữ nằm
+     trong ô số (không đệm vào dòng) nên khi bôi chọn, vùng chọn bắt đầu ngay sát lề. */
+  .cm-editor .cm-lineNumbers .cm-gutterElement {
+    padding: 0 16px 0 4px;
+    font-size: var(--editor-fs);
+  }
+
+  .text-editor .cm-content {
+    padding-left: 0;
+  }
+
+  .text-editor .cm-line {
+    padding-left: 0;
+  }
+
+  /* Khối code và sơ đồ: khoảng 4px bên trái trong suốt, nền chỉ tô từ đó (thẳng hàng với chữ) */
+  .text-editor .cm-codeblock {
+    padding-left: 16px;
+    border-left: 4px solid transparent;
+    background-clip: padding-box;
+  }
+
+  .cm-mermaid {
+    border-left-width: 4px;
+  }
+}
+
+.page:has(.text-editor) {
+  padding-bottom: 0;
+}
+
+.content:has(.text-editor) {
+  container-type: size;
+}
+
+/* Dòng đang đặt con trỏ (như Sublime Text): nền nhạt trên dòng chữ + số hàng sáng hơn.
+   Dòng trong khối code đã có nền riêng nên không tô thêm. */
+.text-editor .cm-activeLine:not(.cm-codeblock) {
+  position: relative;
+  background-color: var(--bg-hover);
+}
+
+/* Dải highlight kéo dài hết bề rộng còn lại của vùng soạn thảo (cột chữ chỉ rộng ~720px) */
+.text-editor .cm-activeLine:not(.cm-codeblock)::after {
+  content: '';
+  position: absolute;
+  left: 100%;
+  top: 0;
+  bottom: 0;
+  width: 0;
+  background-color: var(--bg-hover);
+  pointer-events: none;
+}
+
+@media (min-width: 768px) {
+  .text-editor .cm-activeLine:not(.cm-codeblock)::after {
+    /* phần còn lại của vùng soạn thảo bên phải cột chữ (không vượt quá mép phải nên không sinh thanh cuộn ngang) */
+    width: max(0px, calc(100cqw - 41px - var(--content-max) - var(--page-pad)));
+  }
+}
+
+.cm-editor .cm-activeLineGutter {
+  /* cùng màu với dòng đang chọn để dải highlight liền mạch từ số hàng sang chữ */
+  background: var(--bg-hover);
+  color: var(--text);
+}
+
+/* Thanh công cụ định dạng (kiểu Google Docs): dính ở đầu vùng nội dung */
+.doc-toolbar {
+  position: sticky;
+  top: 0;
+  z-index: 4;
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  height: 40px; /* cố định: khoảng trống cuối trang tính theo đúng chiều cao này */
+  flex-shrink: 0;
+  padding: 4px 10px;
+  overflow-x: auto;
+  /* cửa sổ hẹp thì cuộn ngang được nhưng không hiện thanh cuộn (thanh cuộn làm thanh công cụ cao thêm) */
+  scrollbar-width: none;
+  background: var(--bg-sidebar);
+  border-bottom: 1px solid var(--border);
+}
+
+.doc-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 30px;
+  height: 30px;
+  border-radius: 6px;
+  color: var(--text-muted);
+  font-size: var(--fs);
+}
+
+.doc-btn:hover {
+  background: var(--bg-hover);
+  color: var(--text);
+}
+
+.doc-btn.active {
+  background: var(--bg-active);
+  color: var(--text);
+}
+
+.doc-toolbar-sep {
+  flex-shrink: 0;
+  width: 1px;
+  height: 20px;
+  margin: 0 6px;
+  background: var(--border);
+}
+
+/* Việc cần làm: ô tích vuông, đơn sắc cho hợp với giao diện */
+.cm-todo-box {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  width: 16px;
+  height: 16px;
+  margin-right: 9px;
+  border: 1.5px solid var(--text-faint);
+  border-radius: 2px;
+  vertical-align: -3px;
+  color: transparent;
+  cursor: pointer;
+  transition: background-color 0.12s ease, border-color 0.12s ease;
+}
+
+.cm-todo-box:hover {
+  border-color: var(--text-muted);
+  background: var(--bg-hover);
+}
+
+.cm-todo-box.checked,
+.cm-todo-box.checked:hover {
+  background: var(--text);
+  border-color: var(--text);
+  color: var(--bg);
+}
+
+.cm-todo-done {
+  color: var(--text-muted);
+  text-decoration: line-through;
+}
+
+/* Trích dẫn: thanh dọc bên trái */
+.text-editor .cm-quote-line {
+  /* Thanh dọc vẽ bằng ảnh nền, lệch 4px để thẳng hàng với cột chữ */
+  padding-left: 18px;
+  background-image: linear-gradient(var(--text-faint), var(--text-faint));
+  background-position: 4px 0;
+  background-size: 3px 100%; /* thanh dọc phủ trọn chiều cao dòng, từ đầu dòng đến cuối dòng */
+  background-repeat: no-repeat;
+  color: var(--text-muted);
+}
+
+
+.cm-strike {
+  text-decoration: line-through;
+}
+
+.cm-inline-code {
+  padding: 1px 4px;
+  border-radius: 4px;
+  background: var(--bg-code);
+  color: #c7254e;
+  font-family: ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
+  font-size: 1em;
+}
+
+/* Nút khóa nằm sát mép phải thanh công cụ */
+.doc-toolbar::-webkit-scrollbar {
+  display: none;
+}
+
+.doc-toolbar-spacer {
+  flex: 1;
+}
+
+/* Trang bị khóa: các nút định dạng mờ và không bấm được, chỉ còn nút khóa */
+.doc-toolbar.locked .doc-btn:not(.lock-btn):not(.keep) {
+  opacity: 0.35;
+  pointer-events: none;
+}
+
+.doc-btn.lock-btn.active {
+  color: var(--text);
+}
+
+.cm-locked .cm-todo-box,
+.cm-locked .cm-codeblock-lang,
+.cm-locked .cm-mermaid-diagram {
+  pointer-events: none;
+}
+
+.cm-locked .cm-codeblock-btn[aria-label^='Xóa'],
+.cm-locked .cm-codeblock-btn[aria-label^='Sửa'] {
+  display: none;
+}
+
+/* Đường kẻ ngang (---): ký hiệu bị ẩn, đường vẽ giữa dòng và kéo dài hết bề rộng vùng soạn thảo */
+.text-editor .cm-hr-line {
+  position: relative;
+  background-image: linear-gradient(var(--text-faint), var(--text-faint));
+  background-size: 100% 1px;
+  background-position: 0 50%;
+  background-repeat: no-repeat;
+}
+
+.text-editor .cm-hr-line.cm-line::after {
+  /* phần bên phải cột chữ: vẽ đường kẻ cùng vị trí với phần bên trái; khi dòng đang chọn thì nền highlight
+     (đặt bởi quy tắc .cm-activeLine) vẫn kéo dài hết bề rộng */
+  content: '';
+  position: absolute;
+  left: 100%;
+  top: 0;
+  bottom: 0;
+  width: 0;
+  background-image: linear-gradient(var(--text-faint), var(--text-faint));
+  background-size: 100% 1px;
+  background-position: 0 50%;
+  background-repeat: no-repeat;
+  pointer-events: none;
+}
+
+@media (min-width: 768px) {
+  .text-editor .cm-hr-line.cm-line::after {
+    width: max(0px, calc(100cqw - 41px - var(--content-max) - var(--page-pad)));
+  }
+}
+
+/* Cột tài liệu tham khảo (markdown đã render) */
+.ref-pane {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  min-width: 0;
+  background: var(--bg);
+}
+
+.ref-head {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+  height: 40px;
+  padding: 0 8px 0 12px;
+  background: var(--bg-sidebar);
+  border-bottom: 1px solid var(--border);
+  color: var(--text-muted);
+}
+
+.ref-name {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--text);
+  font-weight: 600;
+}
+
+.ref-head .icon-btn:disabled {
+  opacity: 0.35;
+  pointer-events: none;
+}
+
+.ref-scroll {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+
+/* Nút nổi "Trích dẫn" khi bôi chọn chữ trong tài liệu */
+.ref-pane {
+  position: relative;
+}
+
+.ref-quote-btn {
+  position: absolute;
+  z-index: 5;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 8px;
+  background: var(--bg-elevated);
+  color: var(--text);
+  box-shadow: var(--shadow);
+}
+
+.ref-quote-btn:hover {
+  /* nền hover của app là màu trong suốt; phủ lên nền đặc để nút không bị lộ chữ phía sau */
+  background-image: linear-gradient(var(--bg-hover), var(--bg-hover));
+}
+
+/* Cột tài liệu dùng cùng trình soạn thảo ở chế độ chỉ đọc: lề số hàng giống phần ghi chú (không có .page bao ngoài) */
+.ref-editor {
+  padding: 0;
+}
+
+.ref-editor .cm-editor {
+  --gw: 41px;
+  --edge: 41px;
+  margin-left: 0;
+}
+
+.ref-editor .cm-content {
+  padding: 0 0 80px;
+}
+
+.ref-editor .cm-lineNumbers .cm-gutterElement {
+  padding: 0 16px 0 4px;
+  font-size: var(--fs);
+}
+
+/* Chỉ đọc: không tô dòng đang chọn */
+.ref-editor .cm-activeLine,
+.ref-editor .cm-activeLineGutter {
+  background: none !important;
+}
+
+.ref-editor .cm-activeLine::after {
+  display: none;
+}
+
+.ref-editor .cm-activeLineGutter {
+  color: var(--text-faint);
+}
+
+.cm-md-heading {
+  font-weight: 700;
 }

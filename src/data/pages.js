@@ -8,6 +8,7 @@ import {
 import { db } from '../firebase.js';
 import { buildList } from './tree.js';
 import { track } from './syncStatus.js';
+import { refRef } from './references.js';
 
 // Toàn bộ dữ liệu của Drafts nằm dưới users/{uid}/
 export const pagesCol = (uid) => collection(db, 'users', uid, 'pages');
@@ -67,5 +68,6 @@ export function deletePage(uid, id) {
   const batch = writeBatch(db);
   batch.delete(pageRef(uid, id));
   batch.delete(contentRef(uid, id));
+  batch.delete(refRef(uid, id)); // tài liệu tham khảo đi kèm (nếu có)
   return track(batch.commit());
 }

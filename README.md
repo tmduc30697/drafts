@@ -7,14 +7,16 @@ Bản chạy thật: https://tmduc30697.github.io/drafts/
 ## Tính năng
 
 - Đăng nhập bắt buộc bằng Google. Đã đăng nhập thì lần sau vào thẳng, kể cả khi offline.
-- Sidebar là danh sách trang phẳng: nút "+ Trang mới" ở cuối danh sách, kéo thả để đổi thứ tự (trên điện thoại: nhấn giữ rồi kéo).
-- Trang gồm tiêu đề lớn và nội dung văn bản thuần như Notepad (editor [CodeMirror](https://codemirror.net/)):
-  - Dòng bắt đầu bằng `- ` hoặc `1. ` thì Enter tự thêm `- ` hoặc số tiếp theo; Enter ở dòng trống để thoát danh sách.
-  - Danh sách số tự đánh lại khi xóa/chèn dòng.
-  - Gõ `/` → chọn **Code** để chèn khối code kiểu Notion: thanh tiêu đề có dropdown chọn ngôn ngữ (mặc định Plain text), nút sao chép và xóa khối; có tô màu cú pháp.
-  - Gõ `/` → chọn **Mermaid** để mở popup dán code Mermaid (có xem trước); sơ đồ hiện ngay trong trang, bấm vào sơ đồ để sửa. Thư viện Mermaid chỉ tải khi trang có sơ đồ.
+- Sidebar là danh sách trang phẳng: nút "+ Trang mới" ở cuối danh sách, kéo thả để đổi thứ tự (trên điện thoại: nhấn giữ rồi kéo). Nhấp đúp tên trang để đổi tên. Có nút « / » để thu gọn sidebar thành dải icon.
+- Trang là văn bản thuần như Notepad (editor [CodeMirror](https://codemirror.net/)) có số hàng ở lề trái, thanh công cụ ở đầu trang:
+  - **B I U S**: in đậm, nghiêng, gạch chân, gạch ngang (Cmd/Ctrl+B, I, U, Shift+X). Ký hiệu markdown được ẩn đi.
+  - **Liên kết** (Cmd/Ctrl+K), **danh sách số**, **gạch đầu dòng**, **trích dẫn**, **code inline** (Cmd/Ctrl+E).
+  - **Khối code** kiểu Notion: thanh tiêu đề có dropdown chọn ngôn ngữ, nút sao chép và xóa khối; có tô màu cú pháp.
+  - **Mermaid**: mở popup dán code Mermaid (có xem trước); sơ đồ hiện ngay trong trang, bấm vào sơ đồ để sửa. Thư viện Mermaid chỉ tải khi trang có sơ đồ.
+  - Dòng bắt đầu bằng `- ` hoặc `1. ` thì Enter tự thêm `- ` hoặc số tiếp theo; Enter ở dòng trống để thoát danh sách. Danh sách số tự đánh lại khi xóa/chèn dòng.
+- **Đọc tài liệu và ghi chú song song:** bấm nút import (icon tài liệu) trên thanh công cụ để nhập một file markdown (`.md`, `.markdown`, `.txt`, tối đa 1 MB). Bôi chữ trong tài liệu rồi bấm nút dấu trích dẫn nổi lên để chép đoạn đó sang ghi chú dạng `> ...`. Tài liệu hiện ở cột trái bằng cùng trình soạn thảo ở chế độ chỉ đọc (số hàng đều từng dòng như bên phải, định dạng đậm/nghiêng/link/code/Mermaid), phần ghi chú của bạn ở cột phải; kéo thanh giữa để đổi độ rộng. Gắn theo từng trang, đồng bộ giữa các máy; gỡ bằng dấu X ở đầu cột tài liệu. Trang không import thì chỉ có phần soạn thảo như bình thường. Trên điện thoại tài liệu nằm ở trên, ghi chú ở dưới.
 - Tự lưu sau 1.5 giây ngừng gõ, và lưu ngay khi rời trang hoặc ẩn app.
-- Xóa trang bằng nút thùng rác cạnh tên trang: có hỏi xác nhận, xóa là xóa vĩnh viễn (không có thùng rác).
+- Xóa trang bằng dấu X cạnh tên trang: có hỏi xác nhận, xóa là xóa vĩnh viễn (không có thùng rác).
 - Dùng được khi offline. Có mạng lại thì tự đồng bộ. Chỉ khi offline hoặc lỗi đồng bộ mới hiện biểu tượng đám mây gạch chéo.
 - Khi có bản mới, app hiện snackbar "Có bản mới — Cập nhật" và chỉ tải lại khi bạn bấm.
 
@@ -112,5 +114,5 @@ src/
     PageView/                  Tiêu đề, editor văn bản (CodeMirror: danh sách, menu /, khối code)
     SyncIndicator.jsx          Biểu tượng offline/lỗi đồng bộ
     UpdateSnackbar.jsx         Báo có bản mới
-  styles/                      CSS (biến màu sáng/tối theo hệ thống)
+  styles/                      CSS (giao diện sáng)
 ```

@@ -26,6 +26,7 @@ export function usePages(uid) {
             createdAt: toMillis(data.createdAt) || 0,
             updatedAt: toMillis(data.updatedAt) || 0,
             trashedAt: toMillis(data.trashedAt),
+            locked: !!data.locked,
           };
         });
         setState({ pages, loaded: true, fromCache: snap.metadata.fromCache });

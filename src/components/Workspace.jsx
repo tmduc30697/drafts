@@ -2,10 +2,10 @@ import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState } fro
 import { usePages } from '../hooks/usePages.js';
 import { goHome, goToPage, useHashRoute } from '../hooks/useHashRoute.js';
 import { buildList, UNTITLED } from '../data/tree.js';
-import { createPage, deletePage } from '../data/pages.js';
+import { createPage, deletePage, updatePage } from '../data/pages.js';
 import { ensureOnboarding } from '../data/onboarding.js';
 import { loadJSON, saveJSON } from '../lib/storage.js';
-import { MenuIcon, PlusIcon } from './icons.jsx';
+import { ChevronsRightIcon, PlusIcon } from './icons.jsx';
 import Sidebar from './Sidebar/Sidebar.jsx';
 import SyncIndicator from './SyncIndicator.jsx';
 
@@ -22,8 +22,20 @@ export default function Workspace({ user }) {
   const currentPage = currentId ? byId.get(currentId) : null;
 
   const [drawerOpen, setDrawerOpen] = useState(false);
-  // Tiêu đề đang gõ (chưa lưu) để sidebar cập nhật ngay, không chờ debounce
-  const [liveTitles, setLiveTitles] = useState({});
+  // Thu gọn sidebar (desktop), nhớ theo máy
+  const collapsedKey = 'drafts:sidebar-collapsed';
+  const [collapsed, setCollapsed] = useState(() => loadJSON(collapsedKey, false));
+  const toggleSidebar = () => {
+    // Điện thoại: mở/đóng drawer; desktop: thu gọn/mở rộng
+    if (window.matchMedia('(max-width: 767px)').matches) {
+      setDrawerOpen((o) => !o);
+      return;
+    }
+    setCollapsed((c) => {
+      saveJSON(collapsedKey, !c);
+      return !c;
+    });
+  };
 
   // Ghi nhớ trang mở gần nhất trên máy này
   const lastKey = `drafts:last:${uid}`;
@@ -52,15 +64,20 @@ export default function Workspace({ user }) {
   const ctx = useMemo(
     () => ({
       currentId,
-      titleOf: (p) => liveTitles[p.id] ?? p.title,
+      titleOf: (p) => p.title,
+      onRename: (page, title) => {
+        if (page.locked) return;
+        if (title !== page.title) updatePage(uid, page.id, { title });
+      },
       onCreate: () => {
         const id = createPage(uid, pages);
         setDrawerOpen(false);
         goToPage(id);
       },
       onDelete: (page) => {
+        if (page.locked) return;
         // Xóa hẳn (không có thùng rác) nên hỏi lại trước
-        const title = liveTitles[page.id] ?? page.title;
+        const title = page.title;
         if (!window.confirm(`Xóa "${title || UNTITLED}"? Trang sẽ bị xóa vĩnh viễn.`)) return;
         const id = page.id;
         // Đang mở trang bị xóa thì chuyển sang trang kế bên (dưới, không có thì trên).
@@ -75,58 +92,55 @@ export default function Workspace({ user }) {
       },
       onNavigate: () => setDrawerOpen(false),
     }),
-    [currentId, liveTitles, uid, pages, list, lastKey],
+    [currentId, uid, pages, list, lastKey],
   );
 
-  const setLiveTitle = useCallback((id, title) => {
-    setLiveTitles((m) => (title == null ? omit(m, id) : { ...m, [id]: title }));
-  }, []);
-
   return (
-    <div className={`app ${drawerOpen ? 'drawer-open' : ''}`}>
+    <div className={`app ${drawerOpen ? 'drawer-open' : ''} ${collapsed ? 'sidebar-collapsed' : ''}`}>
       <aside className="sidebar">
-        <Sidebar user={user} list={list} ctx={ctx} />
+        <Sidebar user={user} list={list} ctx={ctx} collapsed={collapsed} onToggle={toggleSidebar} />
       </aside>
       <div className="backdrop" onClick={() => setDrawerOpen(false)} />
 
       <main className="main">
-        <Topbar ctx={ctx} currentPage={currentPage} onOpenDrawer={() => setDrawerOpen(true)} />
-        <div className="content">
-          {!loaded ? null : currentPage ? (
-            <Suspense fallback={null}>
-              <PageView key={currentPage.id} uid={uid} page={currentPage} onLiveTitle={setLiveTitle} />
+        <Topbar onToggleSidebar={toggleSidebar} />
+        <div className="workarea">
+          {!loaded ? (
+            <div className="content" />
+          ) : currentPage ? (
+            <Suspense fallback={<div className="content" />}>
+              <PageView key={currentPage.id} uid={uid} page={currentPage} />
             </Suspense>
           ) : route.view === 'page' ? (
-            <div className="center-screen muted">Trang không tồn tại hoặc đã bị xóa.</div>
-          ) : route.view === 'home' && list.length === 0 ? (
-            <div className="center-screen">
-              <p className="muted">Chưa có trang nào.</p>
-              <button className="btn" onClick={ctx.onCreate}>
-                <PlusIcon size={16} /> Tạo trang
-              </button>
+            <div className="content">
+              <div className="center-screen muted">Trang không tồn tại hoặc đã bị xóa.</div>
             </div>
-          ) : null}
+          ) : route.view === 'home' && list.length === 0 ? (
+            <div className="content">
+              <div className="center-screen">
+                <p className="muted">Chưa có trang nào.</p>
+                <button className="btn" onClick={ctx.onCreate}>
+                  <PlusIcon size={16} /> Tạo trang
+                </button>
+              </div>
+            </div>
+          ) : (
+            <div className="content" />
+          )}
         </div>
       </main>
     </div>
   );
 }
 
-function omit(obj, key) {
-  const { [key]: _, ...rest } = obj;
-  return rest;
-}
-
-// Thanh trên cùng: nút mở drawer (điện thoại), tên trang hiện tại, biểu tượng mất đồng bộ
-function Topbar({ ctx, currentPage, onOpenDrawer }) {
+// Thanh trên cùng: chỉ hiện trên điện thoại (nút mở drawer). Desktop không có thanh này.
+function Topbar({ onToggleSidebar }) {
   return (
     <header className="topbar">
-      <button className="icon-btn mobile-only" aria-label="Mở danh sách trang" onClick={onOpenDrawer}>
-        <MenuIcon />
+      <button className="icon-btn" aria-label="Mở danh sách trang" onClick={onToggleSidebar}>
+        <ChevronsRightIcon />
       </button>
-      <div className="breadcrumb">
-        {currentPage && <span className="crumb">{ctx.titleOf(currentPage) || UNTITLED}</span>}
-      </div>
+      <div className="breadcrumb" />
       <div className="topbar-actions">
         <SyncIndicator />
       </div>

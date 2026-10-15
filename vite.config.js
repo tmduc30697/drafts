@@ -34,8 +34,8 @@ export default defineConfig({
         start_url: '/drafts/',
         scope: '/drafts/',
         display: 'standalone',
-        background_color: '#191919',
-        theme_color: '#191919',
+        background_color: '#ffffff',
+        theme_color: '#ffffff',
         icons: [
           { src: 'pwa-64x64.png', sizes: '64x64', type: 'image/png' },
           { src: 'pwa-192x192.png', sizes: '192x192', type: 'image/png' },

@@ -1,86 +1,98 @@
-import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
+import { useCallback, useRef, useState } from 'react';
 import { updatePage } from '../../data/pages.js';
-import { useDebouncedSaver } from '../../hooks/useDebouncedSaver.js';
+import { byteLength, MAX_REF_BYTES, removeReference, saveReference } from '../../data/references.js';
+import { useReference } from '../../hooks/useReference.js';
+import { loadJSON, saveJSON } from '../../lib/storage.js';
 import Editor from './Editor.jsx';
+import { insertQuote } from './editor/lineKinds.js';
+import ReferencePane from './ReferencePane.jsx';
+import Toolbar from './Toolbar.jsx';
 
-// Một trang: tiêu đề lớn sửa trực tiếp và nội dung văn bản (CodeMirror)
-export default function PageView({ uid, page, onLiveTitle }) {
-  const viewRef = useRef(null);
-  const onEditorReady = useCallback((view) => {
-    viewRef.current = view;
-  }, []);
+const WIDTH_KEY = 'drafts:ref-width';
+const clampWidth = (n) => Math.min(80, Math.max(20, n));
 
-  // Enter ở tiêu đề: nhảy xuống đầu nội dung
-  const focusEditor = () => {
-    const view = viewRef.current;
-    if (!view) return;
-    view.dispatch({ selection: { anchor: 0 } });
-    view.focus();
+// Một trang. Không có tài liệu import: chỉ phần soạn thảo. Có tài liệu import: tài liệu ở cột trái (đọc),
+// phần soạn thảo ghi chú ở cột phải. Tên trang sửa ở sidebar (nhấp đúp).
+export default function PageView({ uid, page }) {
+  const [view, setView] = useState(null);
+  const onEditorReady = useCallback((v) => setView(v), []);
+  const locked = !!page.locked;
+  const { ref } = useReference(uid, page.id);
+  const fileInput = useRef(null);
+  // Độ rộng cột tài liệu (% của vùng làm việc), nhớ theo máy
+  const [width, setWidth] = useState(() => clampWidth(Number(loadJSON(WIDTH_KEY, 45)) || 45));
+
+  const importFile = async (file) => {
+    if (!file) return;
+    const text = await file.text();
+    if (byteLength(text) > MAX_REF_BYTES) {
+      window.alert('Tài liệu quá lớn (vượt 1 MB) nên chưa import được.');
+      return;
+    }
+    saveReference(uid, page.id, { name: file.name, text });
+  };
+
+  const removeRef = () => {
+    if (window.confirm(`Gỡ tài liệu "${ref.name}" khỏi trang này? Ghi chú của bạn không bị ảnh hưởng.`)) removeReference(uid, page.id);
+  };
+
+  // Kéo thanh chia để đổi độ rộng hai cột
+  const startDrag = (e) => {
+    const area = e.currentTarget.parentElement;
+    const rect = area.getBoundingClientRect();
+    const move = (ev) => setWidth(clampWidth(((ev.clientX - rect.left) / rect.width) * 100));
+    const up = (ev) => {
+      window.removeEventListener('pointermove', move);
+      window.removeEventListener('pointerup', up);
+      saveJSON(WIDTH_KEY, clampWidth(((ev.clientX - rect.left) / rect.width) * 100));
+      document.body.classList.remove('dragging-split');
+    };
+    document.body.classList.add('dragging-split');
+    window.addEventListener('pointermove', move);
+    window.addEventListener('pointerup', up);
+    e.preventDefault();
   };
 
   return (
-    <article className="page">
-      <header className="page-header">
-        <PageTitle uid={uid} page={page} onLiveTitle={onLiveTitle} onEnter={focusEditor} />
-      </header>
-      <Editor uid={uid} pageId={page.id} onReady={onEditorReady} />
-    </article>
-  );
-}
-
-function PageTitle({ uid, page, onLiveTitle, onEnter }) {
-  const [value, setValue] = useState(page.title);
-  const ref = useRef(null);
-  const valueRef = useRef(value);
-  valueRef.current = value;
-
-  const saver = useDebouncedSaver(() => {
-    if (valueRef.current !== page.title) updatePage(uid, page.id, { title: valueRef.current });
-  });
-
-  // Tiêu đề đổi từ máy khác: chỉ cập nhật khi ở đây không có thay đổi chưa lưu
-  useEffect(() => {
-    if (!saver.isDirty() && document.activeElement !== ref.current) setValue(page.title);
-  }, [page.title, saver]);
-
-  // Rời trang thì bỏ tiêu đề tạm trong sidebar (Firestore đã có bản mới nhất)
-  useEffect(() => () => onLiveTitle(page.id, null), [page.id, onLiveTitle]);
-
-  // Textarea tự giãn chiều cao theo nội dung
-  useLayoutEffect(() => {
-    const el = ref.current;
-    el.style.height = 'auto';
-    el.style.height = `${el.scrollHeight}px`;
-  }, [value]);
-
-  // Trang mới chưa có tiêu đề: đặt con trỏ vào tiêu đề luôn
-  useEffect(() => {
-    if (!page.title) ref.current?.focus();
-    // chỉ chạy khi mở trang
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [page.id]);
-
-  return (
-    <textarea
-      ref={ref}
-      className="page-title"
-      rows={1}
-      placeholder="Không có tiêu đề"
-      value={value}
-      onChange={(e) => {
-        const v = e.target.value.replace(/\n/g, ' ');
-        setValue(v);
-        onLiveTitle(page.id, v);
-        saver.schedule();
-      }}
-      onBlur={saver.flush}
-      onKeyDown={(e) => {
-        if (e.key === 'Enter' && !e.nativeEvent.isComposing) {
-          e.preventDefault();
-          saver.flush();
-          onEnter();
-        }
-      }}
-    />
+    <>
+      <input
+        ref={fileInput}
+        type="file"
+        accept=".md,.markdown,.txt,text/markdown,text/plain"
+        hidden
+        onChange={(e) => {
+          importFile(e.target.files[0]);
+          e.target.value = '';
+        }}
+      />
+      {ref && (
+        <>
+          <div className="ref-col" style={{ '--ref-w': `${width}%` }}>
+            <ReferencePane
+              name={ref.name}
+              text={ref.text}
+              locked={locked}
+              onReplace={() => fileInput.current.click()}
+              onRemove={removeRef}
+              onQuote={(text) => view && insertQuote(view, text)}
+            />
+          </div>
+          <div className="splitter" role="separator" aria-orientation="vertical" aria-label="Đổi độ rộng cột tài liệu" onPointerDown={startDrag} />
+        </>
+      )}
+      <div className="content">
+        <Toolbar
+          view={view}
+          title={page.title}
+          locked={locked}
+          hasRef={!!ref}
+          onImport={() => fileInput.current.click()}
+          onToggleLock={() => updatePage(uid, page.id, { locked: !locked })}
+        />
+        <article className="page">
+          <Editor uid={uid} pageId={page.id} onReady={onEditorReady} locked={locked} />
+        </article>
+      </div>
+    </>
   );
 }

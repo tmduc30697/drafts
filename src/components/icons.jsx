@@ -23,9 +23,9 @@ export const PlusIcon = (p) => (
     <path d="M12 5v14M5 12h14" />
   </Svg>
 );
-export const TrashIcon = (p) => (
+export const CloseIcon = (p) => (
   <Svg {...p}>
-    <path d="M4 7h16M10 11v6M14 11v6M6 7l1 12a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2l1-12M9 7V4h6v3" />
+    <path d="M6 6l12 12M18 6L6 18" />
   </Svg>
 );
 export const MenuIcon = (p) => (
@@ -53,5 +53,91 @@ export const RestoreIcon = (p) => (
 export const LogoutIcon = (p) => (
   <Svg {...p}>
     <path d="M15 4h3a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-3M10 17l5-5-5-5M15 12H4" />
+  </Svg>
+);
+// » (mở rộng) và « (thu gọn)
+export const ChevronsRightIcon = (p) => (
+  <Svg {...p}>
+    <path d="M6 7l5 5-5 5M13 7l5 5-5 5" />
+  </Svg>
+);
+export const ChevronsLeftIcon = (p) => (
+  <Svg {...p}>
+    <path d="M18 7l-5 5 5 5M11 7l-5 5 5 5" />
+  </Svg>
+);
+export const BulletListIcon = (p) => (
+  <Svg {...p}>
+    <path d="M9 6h11M9 12h11M9 18h11" />
+    <circle cx="4.5" cy="6" r="1" fill="currentColor" />
+    <circle cx="4.5" cy="12" r="1" fill="currentColor" />
+    <circle cx="4.5" cy="18" r="1" fill="currentColor" />
+  </Svg>
+);
+export const NumberedListIcon = (p) => (
+  <Svg {...p}>
+    <path d="M10 6h10M10 12h10M10 18h10M4 5l1.5-1v4M4 13.5c0-1 2.5-1 2.5 0S4 15 4 16.5h2.5M4 19.5h2.5l-1 1.2c1 0 1.2 1.3 0 1.8H4" />
+  </Svg>
+);
+export const TodoListIcon = (p) => (
+  <Svg {...p}>
+    <rect x="3.5" y="4.5" width="5" height="5" rx="1" />
+    <rect x="3.5" y="14.5" width="5" height="5" rx="1" />
+    <path d="M12 7h8M12 17h8" />
+  </Svg>
+);
+export const QuoteIcon = (p) => (
+  <Svg {...p}>
+    <path d="M10 7H6a2 2 0 0 0-2 2v3a2 2 0 0 0 2 2h2v1a2 2 0 0 1-2 2M20 7h-4a2 2 0 0 0-2 2v3a2 2 0 0 0 2 2h2v1a2 2 0 0 1-2 2" />
+  </Svg>
+);
+export const LinkIcon = (p) => (
+  <Svg {...p}>
+    <path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1" />
+  </Svg>
+);
+export const InlineCodeIcon = (p) => (
+  <Svg {...p}>
+    <path d="M8 8l-4 4 4 4M16 8l4 4-4 4M14 5l-4 14" />
+  </Svg>
+);
+export const CodeBlockIcon = (p) => (
+  <Svg {...p}>
+    <path d="M4 8V6a2 2 0 0 1 2-2h2M16 4h2a2 2 0 0 1 2 2v2M20 16v2a2 2 0 0 1-2 2h-2M8 20H6a2 2 0 0 1-2-2v-2" />
+    <path d="M10 9l-2.5 3 2.5 3M14 9l2.5 3-2.5 3" />
+  </Svg>
+);
+// Icon Mermaid (nàng tiên cá): thân uốn cong kết thúc bằng đuôi cá
+export const MermaidIcon = (p) => (
+  <Svg {...p}>
+    <path d="M4 3C4 9 12 9 14 14" />
+    <path d="M14 14C16 11 18 9.5 21 9.5C20 12 19.5 13.5 18.5 14.5C20 16 20.5 18.5 20.5 21C17 20.5 15 17.5 14 14Z" />
+  </Svg>
+);
+export const LockIcon = (p) => (
+  <Svg {...p}>
+    <rect x="5" y="11" width="14" height="9" rx="2" />
+    <path d="M8 11V8a4 4 0 0 1 8 0v3" />
+  </Svg>
+);
+export const UnlockIcon = (p) => (
+  <Svg {...p}>
+    <rect x="5" y="11" width="14" height="9" rx="2" />
+    <path d="M8 11V8a4 4 0 0 1 7.5-1.8" />
+  </Svg>
+);
+export const DownloadIcon = (p) => (
+  <Svg {...p}>
+    <path d="M12 4v11M7.5 10.5L12 15l4.5-4.5M5 19h14" />
+  </Svg>
+);
+export const HrIcon = (p) => (
+  <Svg {...p}>
+    <path d="M3 12h18M8 6.5h8M8 17.5h8" />
+  </Svg>
+);
+export const UploadIcon = (p) => (
+  <Svg {...p}>
+    <path d="M12 15V4M7.5 8.5L12 4l4.5 4.5M5 19h14" />
   </Svg>
 );
