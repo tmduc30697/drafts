@@ -1,3 +1,5 @@
+import { syntaxTree } from '@codemirror/language';
+
 
 // Đổi kiểu cho các dòng đang chọn: danh sách gạch đầu dòng, danh sách số, việc cần làm, trích dẫn.
 
@@ -48,14 +50,50 @@ export function applyKind(view, kind) {
     const insert = remove ? indent : indent + kind.prefix(i);
     return { from: line.from, to: line.from + (m ? m[0].length : indent.length), insert };
   });
-  view.dispatch({ changes, userEvent: 'input.format' });
+  const spec = { changes, userEvent: 'input.format' };
+  // Con trỏ (chưa bôi chọn) nằm sau tiền tố vừa chèn ("- ", "1. ", "> "), không phải trước nó
+  if (state.selection.main.empty) spec.selection = state.selection.map(state.changes(changes), 1);
+  view.dispatch(spec);
   view.focus();
 }
 
-// Chèn khối code: bôi chọn các dòng thì bọc chúng lại; không chọn gì thì thêm khối trống ngay dưới dòng hiện tại
+// Khối code (không phải Mermaid) đang chứa vị trí pos: { first, last, closed } hoặc null
+function codeBlockAt(state, pos) {
+  for (let n = syntaxTree(state).resolveInner(pos, -1); n; n = n.parent) {
+    if (n.name !== 'FencedCode') continue;
+    const first = state.doc.lineAt(n.from);
+    const last = state.doc.lineAt(n.to);
+    if (/^\s*(`{3,}|~{3,})\s*mermaid\s*$/i.test(first.text)) return null;
+    const closed = last.number > first.number && /^\s*(`{3,}|~{3,})\s*$/.test(last.text);
+    return { first, last, closed };
+  }
+  return null;
+}
+
+// Khối code: con trỏ đang nằm trong một khối code thì gỡ khối đó (bỏ hai dòng ```, giữ nguyên nội dung bên trong);
+// bôi chọn các dòng thì bọc chúng lại; không chọn gì thì thêm khối trống ngay dưới dòng hiện tại
 export function insertCodeBlock(view) {
   const { state } = view;
   const sel = state.selection.main;
+  const block = codeBlockAt(state, sel.head);
+  if (block) {
+    const { first, last, closed } = block;
+    const total = state.doc.length;
+    let changes;
+    if (!closed) {
+      changes = [{ from: first.from, to: Math.min(first.to + 1, total) }];
+    } else if (!state.sliceDoc(first.to, last.from).trim()) {
+      // Khối trống (không có chữ bên trong): xóa luôn cả khối
+      changes = [{ from: first.from, to: Math.min(last.to + 1, total) }];
+    } else {
+      changes = [
+        { from: first.from, to: first.to + 1 },
+        { from: last.from - 1, to: last.to },
+      ];
+    }
+    view.dispatch({ changes, userEvent: 'delete' });
+    return;
+  }
   if (!sel.empty) {
     const first = state.doc.lineAt(sel.from);
     const lastPos = state.doc.lineAt(sel.to).from === sel.to && sel.to > sel.from ? sel.to - 1 : sel.to;

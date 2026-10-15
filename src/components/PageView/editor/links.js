@@ -94,6 +94,23 @@ const openLink = EditorView.domEventHandlers({
   },
 });
 
-export const links = [linkPlugin, openLink];
+// Dán một địa chỉ web lên đoạn chữ đang bôi chọn: biến đoạn đó thành liên kết [chữ](địa chỉ)
+const pasteLink = EditorView.domEventHandlers({
+  paste(e, view) {
+    const { state } = view;
+    const sel = state.selection.main;
+    if (state.readOnly || state.selection.ranges.length !== 1 || sel.empty) return false;
+    const url = (e.clipboardData?.getData('text/plain') || '').trim();
+    if (!/^(https?:\/\/|www\.)\S+$/i.test(url)) return false;
+    const text = state.sliceDoc(sel.from, sel.to);
+    if (/\n/.test(text) || /^(https?:\/\/|www\.)\S+$/i.test(text.trim()) || inCode(state, sel.from)) return false;
+    const href = /^www\./i.test(url) ? `https://${url}` : url;
+    e.preventDefault();
+    view.dispatch({ changes: { from: sel.from, to: sel.to, insert: `[${text}](${href})` }, userEvent: 'input.paste' });
+    return true;
+  },
+});
+
+export const links = [linkPlugin, openLink, pasteLink];
 
 export const hiddenLinks = (view) => hiddenRanges(view, linkPlugin);

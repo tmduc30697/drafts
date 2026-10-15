@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
-import { applyLink, toggleWrap } from './editor/format.js';
+import { toggleWrap } from './editor/format.js';
 import { activeKind, applyKind, insertCodeBlock, insertHorizontalRule, KINDS } from './editor/lineKinds.js';
-import { BulletListIcon, CodeBlockIcon, DocIcon, DownloadIcon, HrIcon, InlineCodeIcon, LinkIcon, LockIcon, MermaidIcon, NumberedListIcon, QuoteIcon, UnlockIcon } from '../icons.jsx';
+import { BulletListIcon, CodeBlockIcon, DocIcon, DownloadIcon, HrIcon, InlineCodeIcon, LockIcon, MermaidIcon, NumberedListIcon, QuoteIcon, UnlockIcon } from '../icons.jsx';
 import { insertMermaidBlock } from './editor/mermaidBlocks.js';
 import { openMermaidDialog } from './editor/mermaidDialog.js';
 
@@ -12,7 +12,7 @@ const SHIFT = isMac ? '⇧' : 'Shift+';
 const kind = (id) => KINDS.find((k) => k.id === id);
 
 // Thanh công cụ định dạng phía trên trang (kiểu Slack):
-// B I U S | liên kết | danh sách số, gạch đầu dòng | trích dẫn | code, khối code, Mermaid
+// B I U S | danh sách số, gạch đầu dòng | trích dẫn | code, khối code, Mermaid
 // Tên file tải về: lấy từ tên trang, bỏ ký tự không hợp lệ trong tên file
 const fileName = (title) => `${(title || 'Không có tiêu đề').replace(/[\\/:*?"<>|\n\r]+/g, ' ').trim().slice(0, 100) || 'Drafts'}.md`;
 
@@ -112,10 +112,6 @@ export default function Toolbar({ view, title, locked, hasRef, onImport, onToggl
       </Btn>
       <Btn label={`Gạch ngang (${MOD}${SHIFT}X)`} onClick={wrap('~~', '~~')}>
         <s>S</s>
-      </Btn>
-      <span className="doc-toolbar-sep" />
-      <Btn label={`Liên kết (${MOD}K)`} onClick={run(applyLink)}>
-        <LinkIcon size={17} />
       </Btn>
       <span className="doc-toolbar-sep" />
       <Btn label="Danh sách số" active={active === 'number'} onClick={line('number')}>
