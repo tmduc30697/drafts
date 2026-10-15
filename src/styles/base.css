@@ -183,3 +183,7 @@ textarea {
   font-size: 18px;
   color: rgba(255, 255, 255, 0.6);
 }
+
+.snackbar-toast {
+  padding: 10px 16px;
+}

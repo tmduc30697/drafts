@@ -1,10 +1,25 @@
+import { execSync } from 'node:child_process';
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import { VitePWA } from 'vite-plugin-pwa';
 
+// Mã commit đang build (GitHub Actions có sẵn GITHUB_SHA), dùng làm số phiên bản hiển thị trong app
+function commitSha() {
+  if (process.env.GITHUB_SHA) return process.env.GITHUB_SHA.slice(0, 7);
+  try {
+    return execSync('git rev-parse --short HEAD').toString().trim();
+  } catch {
+    return 'dev';
+  }
+}
+
 // App được host tại https://tmduc30697.github.io/drafts/ nên base phải là /drafts/
 export default defineConfig({
   base: '/drafts/',
+  define: {
+    __APP_VERSION__: JSON.stringify(commitSha()),
+    __BUILD_TIME__: JSON.stringify(new Date().toISOString()),
+  },
   plugins: [
     react(),
     VitePWA({

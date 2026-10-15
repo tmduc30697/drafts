@@ -1,12 +1,15 @@
 import { useState } from 'react';
 import { signOut } from 'firebase/auth';
 import { auth } from '../../firebase.js';
-import { LogoutIcon, PlusIcon, SearchIcon, TrashIcon } from '../icons.jsx';
+import { LogoutIcon, PlusIcon, RestoreIcon, SearchIcon, TrashIcon } from '../icons.jsx';
+import { APP_VERSION, BUILD_TIME, checkForUpdate } from '../../lib/updates.js';
 import Menu from '../Menu.jsx';
 import PageList from './PageList.jsx';
 import { ListDnd } from './ListDnd.jsx';
 
 const isMac = /Mac|iPhone|iPad/.test(navigator.platform);
+
+const buildTimeText = new Intl.DateTimeFormat('vi-VN', { dateStyle: 'short', timeStyle: 'short' }).format(BUILD_TIME);
 
 export default function Sidebar({ user, list, ctx, route, onOpenSearch, onNavigate }) {
   const [userMenu, setUserMenu] = useState(null);
@@ -25,8 +28,18 @@ export default function Sidebar({ user, list, ctx, route, onOpenSearch, onNaviga
         <Menu
           anchor={userMenu}
           onClose={() => setUserMenu(null)}
-          header={<div className="menu-header">{user.email}</div>}
-          items={[{ label: 'Đăng xuất', icon: <LogoutIcon size={16} />, onClick: () => signOut(auth) }]}
+          header={
+            <div className="menu-header">
+              <div>{user.email}</div>
+              <div className="menu-version">
+                Phiên bản {APP_VERSION} · {buildTimeText}
+              </div>
+            </div>
+          }
+          items={[
+            { label: 'Kiểm tra cập nhật', icon: <RestoreIcon size={16} />, onClick: () => checkForUpdate({ silent: false }) },
+            { label: 'Đăng xuất', icon: <LogoutIcon size={16} />, onClick: () => signOut(auth) },
+          ]}
         />
       )}
 
