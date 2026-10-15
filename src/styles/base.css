@@ -124,3 +124,26 @@ textarea {
 .btn-danger {
   color: var(--danger);
 }
+
+/* Màn hình đăng nhập */
+.login-title {
+  margin: 0 0 8px;
+  font-size: 28px;
+  font-weight: 700;
+}
+
+.login-btn {
+  padding: 10px 18px;
+}
+
+.login-note,
+.login-error {
+  max-width: 340px;
+  margin: 0;
+  font-size: 14px;
+  color: var(--text-muted);
+}
+
+.login-error {
+  color: var(--danger);
+}
