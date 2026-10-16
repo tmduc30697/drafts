@@ -1,9 +1,10 @@
-import { useCallback, useRef, useState } from 'react';
+import { useCallback, useState } from 'react';
 import { updatePage } from '../../data/pages.js';
-import { byteLength, MAX_REF_BYTES, removeReference, saveReference } from '../../data/references.js';
+import { byteLength, MAX_REF_BYTES, refDisplayName, removeReference, saveReference } from '../../data/references.js';
 import { useReference } from '../../hooks/useReference.js';
 import { loadJSON, saveJSON } from '../../lib/storage.js';
 import Editor from './Editor.jsx';
+import ImportDialog from './ImportDialog.jsx';
 import { insertQuote } from './editor/lineKinds.js';
 import ReferencePane from './ReferencePane.jsx';
 import Toolbar from './Toolbar.jsx';
@@ -18,22 +19,22 @@ export default function PageView({ uid, page }) {
   const onEditorReady = useCallback((v) => setView(v), []);
   const locked = !!page.locked;
   const { ref } = useReference(uid, page.id);
-  const fileInput = useRef(null);
+  const [importing, setImporting] = useState(false);
   // Độ rộng cột tài liệu (% của vùng làm việc), nhớ theo máy
   const [width, setWidth] = useState(() => clampWidth(Number(loadJSON(WIDTH_KEY, 45)) || 45));
 
-  const importFile = async (file) => {
-    if (!file) return;
-    const text = await file.text();
+  // Nạp tài liệu (từ file hoặc văn bản dán) để đọc ở cột bên cạnh
+  const importReference = ({ name, text }) => {
     if (byteLength(text) > MAX_REF_BYTES) {
       window.alert('Tài liệu quá lớn (vượt 1 MB) nên chưa import được.');
       return;
     }
-    saveReference(uid, page.id, { name: file.name, text });
+    setImporting(false);
+    saveReference(uid, page.id, { name, text });
   };
 
   const removeRef = () => {
-    if (window.confirm(`Gỡ tài liệu "${ref.name}" khỏi trang này? Ghi chú của bạn không bị ảnh hưởng.`)) removeReference(uid, page.id);
+    if (window.confirm(`Gỡ tài liệu "${refDisplayName(ref.name)}" khỏi trang này? Ghi chú của bạn không bị ảnh hưởng.`)) removeReference(uid, page.id);
   };
 
   // Kéo thanh chia để đổi độ rộng hai cột
@@ -55,24 +56,15 @@ export default function PageView({ uid, page }) {
 
   return (
     <>
-      <input
-        ref={fileInput}
-        type="file"
-        accept=".md,.markdown,.txt,text/markdown,text/plain"
-        hidden
-        onChange={(e) => {
-          importFile(e.target.files[0]);
-          e.target.value = '';
-        }}
-      />
+      {importing && <ImportDialog onSubmit={importReference} onClose={() => setImporting(false)} />}
       {ref && (
         <>
           <div className="ref-col" style={{ '--ref-w': `${width}%` }}>
             <ReferencePane
-              name={ref.name}
+              name={refDisplayName(ref.name)}
               text={ref.text}
               locked={locked}
-              onReplace={() => fileInput.current.click()}
+              onReplace={() => setImporting(true)}
               onRemove={removeRef}
               onQuote={(text) => view && insertQuote(view, text)}
             />
@@ -86,7 +78,7 @@ export default function PageView({ uid, page }) {
           title={page.title || page.preview}
           locked={locked}
           hasRef={!!ref}
-          onImport={() => fileInput.current.click()}
+          onImport={() => setImporting(true)}
           onToggleLock={() => updatePage(uid, page.id, { locked: !locked })}
         />
         <article className="page">
