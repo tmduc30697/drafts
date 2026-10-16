@@ -1,8 +1,7 @@
 import { useState, useSyncExternalStore } from 'react';
 import { signOut } from 'firebase/auth';
 import { auth } from '../../firebase.js';
-import { DocIcon, FolderIcon, LogoutIcon, RestoreIcon, ChevronsLeftIcon, ChevronsRightIcon } from '../icons.jsx';
-import { UNTITLED } from '../../data/tree.js';
+import { FolderIcon, LogoutIcon, RestoreIcon, ChevronsLeftIcon, ChevronsRightIcon } from '../icons.jsx';
 import { APP_VERSION, BUILD_TIME, checkForUpdate } from '../../lib/updates.js';
 import Menu from '../Menu.jsx';
 import SyncIndicator from '../SyncIndicator.jsx';
@@ -31,9 +30,8 @@ function Avatar({ user }) {
 }
 
 // Sidebar: danh sách trang + nút tạo trang, tài khoản ở dưới cùng.
-// Thu gọn (desktop) thì chỉ còn một dải dọc: icon từng trang + tài khoản.
+// Thu gọn (desktop) thì chỉ còn một dải dọc: nút mở sidebar + tài khoản.
 export default function Sidebar({ user, tree, ctx, collapsed, onToggle }) {
-  const { list } = tree;
   const [userMenu, setUserMenu] = useState(null);
   const isDesktop = useIsDesktop();
   const rail = collapsed && isDesktop;
@@ -64,23 +62,8 @@ export default function Sidebar({ user, tree, ctx, collapsed, onToggle }) {
         <button className="icon-btn small" aria-label="Mở sidebar" title="Mở sidebar" onClick={onToggle}>
           <ChevronsRightIcon size={16} />
         </button>
-        <div className="rail-pages">
-          {list.map((page) => {
-            const title = ctx.titleOf(page) || UNTITLED;
-            return (
-              <a
-                key={page.id}
-                className={`rail-btn ${ctx.currentId === page.id ? 'active' : ''}`}
-                href={`#/p/${page.id}`}
-                title={title}
-                aria-label={title}
-                draggable={false}
-              >
-                <DocIcon size={18} />
-              </a>
-            );
-          })}
-        </div>
+        {/* khoảng trống đẩy avatar xuống đáy */}
+        <div className="rail-pages" />
         <button className="rail-btn rail-user" aria-label="Tài khoản" title={user.displayName || user.email} onClick={toggleUserMenu}>
           <Avatar user={user} />
         </button>
