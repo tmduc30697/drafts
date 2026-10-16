@@ -1,7 +1,7 @@
 import { syntaxTree } from '@codemirror/language';
 
 
-// Đổi kiểu cho các dòng đang chọn: danh sách gạch đầu dòng, danh sách số, việc cần làm, trích dẫn.
+// Đổi kiểu cho các dòng đang chọn: tiêu đề, danh sách gạch đầu dòng, danh sách số, việc cần làm, trích dẫn.
 
 // Tiền tố của từng kiểu; `test` nhận ra dòng đã có kiểu đó
 export const KINDS = [
@@ -9,10 +9,13 @@ export const KINDS = [
   { id: 'number', label: 'Danh sách số', test: /^\s*\d+[.)]\s/, prefix: (i) => `${i + 1}. ` },
   { id: 'todo', label: 'Việc cần làm', test: /^\s*[-*+]\s\[[ xX]\]\s/, prefix: () => '- [ ] ' },
   { id: 'quote', label: 'Trích dẫn', test: /^\s*>\s?/, prefix: () => '> ' },
+  { id: 'h1', label: 'Tiêu đề 1', test: /^# /, prefix: () => '# ' },
+  { id: 'h2', label: 'Tiêu đề 2', test: /^## /, prefix: () => '## ' },
+  { id: 'h3', label: 'Tiêu đề 3', test: /^### /, prefix: () => '### ' },
 ];
 
-// Bỏ tiền tố danh sách/trích dẫn hiện có, giữ lại phần thụt lề
-const ANY_PREFIX = /^(\s*)(?:[-*+]\s\[[ xX]\]\s|[-*+]\s|\d+[.)]\s|>\s?)/;
+// Bỏ tiền tố tiêu đề/danh sách/trích dẫn hiện có, giữ lại phần thụt lề
+const ANY_PREFIX = /^(\s*)(?:#{1,6} |[-*+]\s\[[ xX]\]\s|[-*+]\s|\d+[.)]\s|>\s?)/;
 
 // Các dòng đang được chọn (bỏ dòng trống nếu còn dòng có chữ)
 function selectedLines(state) {

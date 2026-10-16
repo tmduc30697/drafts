@@ -31,8 +31,9 @@ function CollectionGroup({ collection, pages, ctx }) {
     ctx.onRename(collection, value.trim());
   };
 
+  // Bọc cả nhóm: hàng collection dính ở đầu vùng cuộn trong lúc còn thấy trang của nó (position: sticky trong nhóm)
   return (
-    <>
+    <div className="tree-group">
       <div ref={dnd.setRef} {...(editing ? {} : dnd.dragProps)} className={rowClass('tree-row tree-collection', dnd)}>
         {editing ? (
           <div className="tree-link">
@@ -96,7 +97,7 @@ function CollectionGroup({ collection, pages, ctx }) {
         ) : (
           <div className="tree-empty">Chưa có trang. Kéo trang vào đây hoặc bấm ＋</div>
         ))}
-    </>
+    </div>
   );
 }
 

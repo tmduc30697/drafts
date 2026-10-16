@@ -10,6 +10,7 @@ import { mermaidBlocks } from './mermaidBlocks.js';
 import { tables } from './tables.js';
 import { lineNumbering } from './lineNumbering.js';
 import { blockSelect } from './blockSelect.js';
+import { headings } from './headings.js';
 import { blockStyles } from './blockStyles.js';
 import { format, hiddenInline } from './format.js';
 import { hiddenLinks, links } from './links.js';
@@ -134,6 +135,7 @@ export function editorExtensions({ onDocChange, locked = false }) {
     links,
     format,
     blockStyles,
+    headings, // trước listKeymap: Backspace ở đầu tiêu đề bỏ kiểu tiêu đề
     renumberLists,
     listKeymap,
     keymap.of([...defaultKeymap, ...historyKeymap, indentWithTab]),

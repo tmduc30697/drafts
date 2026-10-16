@@ -1061,3 +1061,30 @@
 .cm-md-heading {
   font-weight: 700;
 }
+
+/* Tiêu đề trong ghi chú ("# ", "## ", "### " được ẩn) */
+.text-editor .cm-heading {
+  font-weight: 700;
+  line-height: 1.4;
+}
+
+.text-editor .cm-h1 {
+  font-size: 1.6em;
+  padding-top: 6px;
+}
+
+.text-editor .cm-h2 {
+  font-size: 1.35em;
+  padding-top: 4px;
+}
+
+.text-editor .cm-h3 {
+  font-size: 1.15em;
+  padding-top: 2px;
+}
+
+/* Nút H1 H2 H3 trên thanh công cụ */
+.doc-btn-heading {
+  font-size: 12px;
+  font-weight: 700;
+}

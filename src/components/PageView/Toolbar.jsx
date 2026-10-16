@@ -10,11 +10,12 @@ import { downloadText } from '../../lib/download.js';
 const isMac = /Mac|iPhone|iPad/.test(navigator.platform);
 const MOD = isMac ? '⌘' : 'Ctrl+';
 const SHIFT = isMac ? '⇧' : 'Shift+';
+const ALT = isMac ? '⌥' : 'Alt+';
 
 const kind = (id) => KINDS.find((k) => k.id === id);
 
 // Thanh công cụ định dạng phía trên trang (kiểu Slack):
-// B I U S | danh sách số, gạch đầu dòng | trích dẫn, đường kẻ, bảng | code, khối code, Mermaid
+// H1 H2 H3 | B I U S | danh sách số, gạch đầu dòng | trích dẫn, đường kẻ, bảng | code, khối code, Mermaid
 // Tên file tải về: lấy từ tên trang, bỏ ký tự không hợp lệ trong tên file
 const fileName = (title) => `${(title || 'Không có tiêu đề').replace(/[\\/:*?"<>|\n\r]+/g, ' ').trim().slice(0, 100) || 'Drafts'}.md`;
 
@@ -93,6 +94,12 @@ export default function Toolbar({ view, title, locked, hasRef, onImport, onToggl
 
   return (
     <div className={`doc-toolbar ${locked ? 'locked' : ''}`} role="toolbar" aria-label="Định dạng">
+      {[1, 2, 3].map((n) => (
+        <Btn key={n} label={`Tiêu đề ${n} (${MOD}${ALT}${n})`} active={active === `h${n}`} onClick={line(`h${n}`)}>
+          <span className="doc-btn-heading">H{n}</span>
+        </Btn>
+      ))}
+      <span className="doc-toolbar-sep" />
       <Btn label={`In đậm (${MOD}B)`} onClick={wrap('**', '**')}>
         <b>B</b>
       </Btn>

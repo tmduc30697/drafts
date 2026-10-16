@@ -529,9 +529,20 @@ body.dragging-split {
   bottom: -1px;
 }
 
-/* Collection: mũi tên mở / đóng nằm trong lề trái để icon thẳng hàng với icon trang */
+/* Collection: mũi tên mở / đóng nằm trong lề trái để icon thẳng hàng với icon trang.
+   Dính ở đầu vùng cuộn của sidebar khi đang cuộn qua các trang của nó (chỉ trong phạm vi nhóm .tree-group).
+   Nền phải đục để che các hàng cuộn bên dưới: các nền nhạt (rê chuột, thả vào) được chồng lên nền sidebar. */
 .tree-collection {
+  position: sticky;
+  top: 0;
+  z-index: 2;
   padding-left: 0;
+  background: var(--bg-sidebar);
+}
+
+.tree-collection:hover,
+.tree-collection.menu-open {
+  background: linear-gradient(var(--bg-hover), var(--bg-hover)), var(--bg-sidebar);
 }
 
 .tree-chevron {
@@ -572,9 +583,9 @@ body.dragging-split {
   color: var(--text-faint);
 }
 
-/* Đang kéo một trang vào giữa hàng collection: thả vào collection */
+/* Đang kéo một trang vào hàng collection: thả vào collection */
 .tree-row.drop-inside {
-  background: color-mix(in srgb, var(--accent) 12%, transparent);
+  background: linear-gradient(color-mix(in srgb, var(--accent) 12%, transparent), color-mix(in srgb, var(--accent) 12%, transparent)), var(--bg-sidebar);
   box-shadow: inset 0 0 0 1px var(--accent);
 }
 
