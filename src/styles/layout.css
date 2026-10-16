@@ -466,6 +466,16 @@ body.dragging-split {
   color: var(--danger);
 }
 
+.sync-indicator.syncing svg {
+  animation: sync-spin 0.9s linear infinite;
+}
+
+@keyframes sync-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
 .sync-popover {
   max-width: 260px;
   padding: 10px 12px;

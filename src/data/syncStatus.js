@@ -1,37 +1,66 @@
-// Theo dõi lỗi ghi Firestore để hiện biểu tượng "lỗi đồng bộ".
-// Firestore tự xếp hàng các lần ghi khi offline, nên promise chỉ reject khi
-// server từ chối thật sự (vd. sai Rules, document quá 1 MB).
+// Theo dõi trạng thái ghi Firestore để hiện biểu tượng đồng bộ:
+// - pending: số lần ghi đang chờ server xác nhận (hiện icon xoay),
+// - lỗi: Firestore tự xếp hàng các lần ghi khi offline, nên promise chỉ reject khi
+//   server từ chối thật sự (vd. sai Rules, document quá 1 MB).
 
 let lastError = null;
-const listeners = new Set();
+let pending = 0;
+const errorListeners = new Set();
+const pendingListeners = new Set();
 
-function emit() {
-  for (const fn of listeners) fn(lastError);
+function emitError() {
+  for (const fn of errorListeners) fn(lastError);
+}
+
+function emitPending() {
+  for (const fn of pendingListeners) fn(pending);
 }
 
 export function subscribeSyncError(fn) {
-  listeners.add(fn);
+  errorListeners.add(fn);
   fn(lastError);
-  return () => listeners.delete(fn);
+  return () => errorListeners.delete(fn);
+}
+
+// Số lần ghi đang chờ server xác nhận
+export function subscribeSyncPending(fn) {
+  pendingListeners.add(fn);
+  fn(pending);
+  return () => pendingListeners.delete(fn);
 }
 
 // Ghi nhận lỗi từ nơi khác (vd. listener bị server từ chối)
 export function reportSyncError(err) {
   console.error('Lỗi đồng bộ Firestore:', err);
   lastError = err;
-  emit();
+  emitError();
 }
 
-// Bọc một lần ghi: thành công thì xóa lỗi cũ, thất bại thì ghi nhận lỗi
+// Bọc một lần ghi: đếm đang chờ; thành công thì xóa lỗi cũ, thất bại thì ghi nhận lỗi
 export function track(promise) {
+  pending++;
+  emitPending();
+  const done = () => {
+    pending--;
+    emitPending();
+  };
   promise.then(
     () => {
+      done();
       if (lastError) {
         lastError = null;
-        emit();
+        emitError();
       }
     },
-    reportSyncError,
+    (err) => {
+      done();
+      reportSyncError(err);
+    },
   );
   return promise;
+}
+
+// Cho icon đồng bộ xoay một nhịp dù không có gì để ghi (phản hồi khi bấm ⌘S)
+export function pulseSync() {
+  track(new Promise((resolve) => setTimeout(resolve, 600)));
 }

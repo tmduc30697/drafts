@@ -5,6 +5,8 @@ import { buildList, UNTITLED } from '../data/tree.js';
 import { createPage, deletePage, updatePage } from '../data/pages.js';
 import { ensureOnboarding } from '../data/onboarding.js';
 import { loadJSON, saveJSON } from '../lib/storage.js';
+import { flushAll } from '../lib/flushRegistry.js';
+import { pulseSync } from '../data/syncStatus.js';
 import { ChevronsRightIcon, PlusIcon } from './icons.jsx';
 import Sidebar from './Sidebar/Sidebar.jsx';
 import SyncIndicator from './SyncIndicator.jsx';
@@ -36,6 +38,19 @@ export default function Workspace({ user }) {
       return !c;
     });
   };
+
+  // ⌘S / Ctrl+S: lưu ngay lên Firebase thay vì mở hộp thoại tải trang của trình duyệt.
+  // Icon đồng bộ xoay theo lần ghi; không có gì cần lưu thì vẫn xoay một nhịp để biết đã nhận lệnh.
+  useEffect(() => {
+    const onKey = (e) => {
+      if (!(e.metaKey || e.ctrlKey) || e.altKey || e.key.toLowerCase() !== 's') return;
+      e.preventDefault();
+      flushAll();
+      pulseSync();
+    };
+    window.addEventListener('keydown', onKey, true);
+    return () => window.removeEventListener('keydown', onKey, true);
+  }, []);
 
   // Ghi nhớ trang mở gần nhất trên máy này
   const lastKey = `drafts:last:${uid}`;
