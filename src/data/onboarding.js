@@ -19,9 +19,9 @@ console.log('xin chào');
 \`\`\`
 
 Sắp xếp trang
-- Bấm "+ Trang mới" ở cuối danh sách để tạo trang.
-- Kéo thả trang trong sidebar để đổi thứ tự (điện thoại: nhấn giữ rồi kéo).
-- Bấm biểu tượng thùng rác cạnh tên trang để xóa (xóa vĩnh viễn, có hỏi lại trước).
+- Trang nằm trong collection. Bấm "Collection mới" để tạo collection, bấm ＋ trên hàng collection để tạo trang trong đó.
+- Kéo thả trang trong sidebar để đổi thứ tự hoặc chuyển sang collection khác (điện thoại: nhấn giữ rồi kéo).
+- Bấm × cạnh tên trang để xóa (xóa vĩnh viễn, có hỏi lại trước).
 
 Mẹo
 - Thêm Drafts vào màn hình chính iPhone: Safari → Chia sẻ → Thêm vào MH chính.
@@ -39,12 +39,22 @@ export async function ensureOnboarding(uid, pages) {
   }
   if (snap.exists() && snap.data().onboarded) return null;
 
+  // Trang hướng dẫn nằm trong collection "Bắt đầu" (trang nào cũng phải thuộc một collection)
+  const collection = doc(pagesCol(uid));
   const ref = doc(pagesCol(uid));
   const batch = writeBatch(db);
-  batch.set(ref, {
+  batch.set(collection, {
+    kind: 'collection',
     title: 'Bắt đầu',
     parentId: null,
     order: nextOrder(pages),
+    createdAt: serverTimestamp(),
+    updatedAt: serverTimestamp(),
+  });
+  batch.set(ref, {
+    title: 'Hướng dẫn',
+    parentId: collection.id,
+    order: 1,
     createdAt: serverTimestamp(),
     updatedAt: serverTimestamp(),
   });

@@ -39,6 +39,22 @@ export const SyncIcon = (p) => (
     <path d="M20 11a8 8 0 0 0-14.3-4.9L4 8M4 4v4h4M4 13a8 8 0 0 0 14.3 4.9L20 16M20 20v-4h-4" />
   </Svg>
 );
+export const EditIcon = (p) => (
+  <Svg {...p}>
+    <path d="M4 20h4L19 9l-4-4L4 16v4z" />
+    <path d="M14 6l4 4" />
+  </Svg>
+);
+export const FolderIcon = (p) => (
+  <Svg {...p}>
+    <path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7z" />
+  </Svg>
+);
+export const ChevronRightIcon = (p) => (
+  <Svg {...p}>
+    <path d="M9 6l6 6-6 6" />
+  </Svg>
+);
 export const CloudOffIcon = (p) => (
   <Svg {...p}>
     <path d="M3 3l18 18M8 7.5A6 6 0 0 1 17.7 10H18a4 4 0 0 1 2.3 7.3M17 18H7a4.5 4.5 0 0 1-1.8-8.6" />

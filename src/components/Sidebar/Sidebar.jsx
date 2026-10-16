@@ -1,7 +1,7 @@
 import { useState, useSyncExternalStore } from 'react';
 import { signOut } from 'firebase/auth';
 import { auth } from '../../firebase.js';
-import { DocIcon, LogoutIcon, PlusIcon, RestoreIcon, ChevronsLeftIcon, ChevronsRightIcon } from '../icons.jsx';
+import { DocIcon, FolderIcon, LogoutIcon, RestoreIcon, ChevronsLeftIcon, ChevronsRightIcon } from '../icons.jsx';
 import { UNTITLED } from '../../data/tree.js';
 import { APP_VERSION, BUILD_TIME, checkForUpdate } from '../../lib/updates.js';
 import Menu from '../Menu.jsx';
@@ -32,7 +32,8 @@ function Avatar({ user }) {
 
 // Sidebar: danh sách trang + nút tạo trang, tài khoản ở dưới cùng.
 // Thu gọn (desktop) thì chỉ còn một dải dọc: icon từng trang + tài khoản.
-export default function Sidebar({ user, list, ctx, collapsed, onToggle }) {
+export default function Sidebar({ user, tree, ctx, collapsed, onToggle }) {
+  const { list } = tree;
   const [userMenu, setUserMenu] = useState(null);
   const isDesktop = useIsDesktop();
   const rail = collapsed && isDesktop;
@@ -79,9 +80,6 @@ export default function Sidebar({ user, list, ctx, collapsed, onToggle }) {
               </a>
             );
           })}
-          <button className="rail-btn" aria-label="Trang mới" title="Trang mới" onClick={ctx.onCreate}>
-            <PlusIcon size={18} />
-          </button>
         </div>
         <button className="rail-btn rail-user" aria-label="Tài khoản" title={user.displayName || user.email} onClick={toggleUserMenu}>
           <Avatar user={user} />
@@ -102,12 +100,12 @@ export default function Sidebar({ user, list, ctx, collapsed, onToggle }) {
         </button>
       </div>
       <div className="sidebar-tree">
-        <ListDnd uid={user.uid} list={list} titleOf={ctx.titleOf}>
-          <PageList list={list} ctx={ctx} />
+        <ListDnd uid={user.uid} tree={tree} titleOf={ctx.titleOf} onDropInside={ctx.expand}>
+          <PageList tree={tree} ctx={ctx} />
         </ListDnd>
-        <button className="sidebar-item" onClick={ctx.onCreate}>
-          <PlusIcon size={16} />
-          <span>Trang mới</span>
+        <button className="sidebar-item" onClick={ctx.onCreateCollection}>
+          <FolderIcon size={16} />
+          <span>Collection mới</span>
         </button>
       </div>
 

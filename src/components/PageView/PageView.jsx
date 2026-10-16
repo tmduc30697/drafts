@@ -8,8 +8,10 @@ import ImportDialog from './ImportDialog.jsx';
 import { insertQuote } from './editor/lineKinds.js';
 import ReferencePane from './ReferencePane.jsx';
 import Toolbar from './Toolbar.jsx';
+import { DocIcon, EditIcon } from '../icons.jsx';
 
 const WIDTH_KEY = 'drafts:ref-width';
+const FOLD_KEY = 'drafts:ref-fold'; // cột đang thu gọn: null | 'doc' | 'notes'
 const clampWidth = (n) => Math.min(80, Math.max(20, n));
 
 // Một trang. Không có tài liệu import: chỉ phần soạn thảo. Có tài liệu import: tài liệu ở cột trái (đọc),
@@ -20,6 +22,15 @@ export default function PageView({ uid, page }) {
   const locked = !!page.locked;
   const { ref } = useReference(uid, page.id);
   const [importing, setImporting] = useState(false);
+  // Thu gọn một trong hai cột (tài liệu / ghi chú) để cột kia chiếm hết chỗ; nhớ theo máy
+  const [fold, setFoldState] = useState(() => {
+    const v = loadJSON(FOLD_KEY, null);
+    return v === 'doc' || v === 'notes' ? v : null;
+  });
+  const setFold = (v) => {
+    setFoldState(v);
+    saveJSON(FOLD_KEY, v);
+  };
   // Độ rộng cột tài liệu (% của vùng làm việc), nhớ theo máy
   const [width, setWidth] = useState(() => clampWidth(Number(loadJSON(WIDTH_KEY, 45)) || 45));
 
@@ -59,7 +70,11 @@ export default function PageView({ uid, page }) {
       {importing && <ImportDialog onSubmit={importReference} onClose={() => setImporting(false)} />}
       {ref && (
         <>
-          <div className="ref-col" style={{ '--ref-w': `${width}%` }}>
+          {/* Cột thu gọn chỉ bị ẩn (không gỡ) để giữ vị trí cuộn và editor */}
+          <div
+            className={`ref-col ${fold === 'doc' ? 'folded' : ''} ${fold === 'notes' ? 'full' : ''}`}
+            style={{ '--ref-w': `${width}%` }}
+          >
             <ReferencePane
               name={refDisplayName(ref.name)}
               text={ref.text}
@@ -67,12 +82,18 @@ export default function PageView({ uid, page }) {
               onReplace={() => setImporting(true)}
               onRemove={removeRef}
               onQuote={(text) => view && insertQuote(view, text)}
+              onFoldDoc={() => setFold('doc')}
+              onFoldNotes={() => setFold('notes')}
             />
           </div>
-          <div className="splitter" role="separator" aria-orientation="vertical" aria-label="Đổi độ rộng cột tài liệu" onPointerDown={startDrag} />
+          {fold === 'doc' && <FoldStrip label="Tài liệu" icon={<DocIcon size={16} />} onOpen={() => setFold(null)} />}
+          {!fold && (
+            <div className="splitter" role="separator" aria-orientation="vertical" aria-label="Đổi độ rộng cột tài liệu" onPointerDown={startDrag} />
+          )}
         </>
       )}
-      <div className="content">
+      {ref && fold === 'notes' && <FoldStrip label="Ghi chú" icon={<EditIcon size={16} />} onOpen={() => setFold(null)} />}
+      <div className={`content ${ref && fold === 'notes' ? 'folded' : ''}`}>
         <Toolbar
           view={view}
           title={page.title || page.preview}
@@ -86,5 +107,15 @@ export default function PageView({ uid, page }) {
         </article>
       </div>
     </>
+  );
+}
+
+// Dải hẹp thay cho cột đang thu gọn: bấm để mở lại
+function FoldStrip({ label, icon, onOpen }) {
+  return (
+    <button type="button" className="fold-strip" title={`Mở ${label.toLowerCase()}`} aria-label={`Mở ${label.toLowerCase()}`} onClick={onOpen}>
+      {icon}
+      <span className="fold-strip-label">{label}</span>
+    </button>
   );
 }

@@ -5,6 +5,7 @@ import { BulletListIcon, CodeBlockIcon, DocIcon, DownloadIcon, HrIcon, InlineCod
 import { insertMermaidBlock } from './editor/mermaidBlocks.js';
 import { openMermaidDialog } from './editor/mermaidDialog.js';
 import { insertTable } from './editor/tables.js';
+import { downloadText } from '../../lib/download.js';
 
 const isMac = /Mac|iPhone|iPad/.test(navigator.platform);
 const MOD = isMac ? '⌘' : 'Ctrl+';
@@ -17,16 +18,6 @@ const kind = (id) => KINDS.find((k) => k.id === id);
 // Tên file tải về: lấy từ tên trang, bỏ ký tự không hợp lệ trong tên file
 const fileName = (title) => `${(title || 'Không có tiêu đề').replace(/[\\/:*?"<>|\n\r]+/g, ' ').trim().slice(0, 100) || 'Drafts'}.md`;
 
-function downloadText(text, name) {
-  const url = URL.createObjectURL(new Blob([text], { type: 'text/markdown;charset=utf-8' }));
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = name;
-  document.body.append(a);
-  a.click();
-  a.remove();
-  setTimeout(() => URL.revokeObjectURL(url), 1000);
-}
 
 export default function Toolbar({ view, title, locked, hasRef, onImport, onToggleLock }) {
   const [active, setActive] = useState(null);

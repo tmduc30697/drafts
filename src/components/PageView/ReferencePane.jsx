@@ -1,7 +1,8 @@
 import { useEffect, useRef, useState } from 'react';
 import { EditorState } from '@codemirror/state';
 import { Decoration, EditorView, ViewPlugin } from '@codemirror/view';
-import { CloseIcon, DocIcon, QuoteIcon } from '../icons.jsx';
+import { ChevronsLeftIcon, ChevronsRightIcon, CloseIcon, DocIcon, DownloadIcon, QuoteIcon } from '../icons.jsx';
+import { downloadText } from '../../lib/download.js';
 import { editorExtensions } from './editor/setup.js';
 
 // Dòng tiêu đề markdown ("# ...") đậm lên; giữ nguyên chiều cao dòng để số hàng đều như bên ghi chú
@@ -32,7 +33,7 @@ const headings = ViewPlugin.fromClass(
 
 // Cột trái: tài liệu markdown được import, chỉ để đọc. Dùng cùng trình soạn thảo với phần ghi chú (chế độ chỉ đọc)
 // nên lề số hàng, định dạng và chiều cao dòng giống hệt bên phải.
-export default function ReferencePane({ name, text, locked, onReplace, onRemove, onQuote }) {
+export default function ReferencePane({ name, text, locked, onReplace, onRemove, onQuote, onFoldDoc, onFoldNotes }) {
   const host = useRef(null);
   const viewRef = useRef(null);
   const pane = useRef(null);
@@ -113,14 +114,29 @@ export default function ReferencePane({ name, text, locked, onReplace, onRemove,
   return (
     <section ref={pane} className="ref-pane" aria-label="Tài liệu tham khảo">
       <header className="ref-head">
+        <button className="icon-btn small" title="Thu gọn tài liệu" aria-label="Thu gọn tài liệu" onClick={onFoldDoc}>
+          <ChevronsLeftIcon size={15} />
+        </button>
         <span className="ref-name" title={name}>
           {name}
         </span>
+        <button
+          className="icon-btn small"
+          title="Tải tài liệu về máy"
+          aria-label="Tải tài liệu"
+          // Tài liệu dán vào (tên không có đuôi file) tải về thành Document.md
+          onClick={() => downloadText(text, /\.(md|markdown|txt)$/i.test(name) ? name : `${name}.md`)}
+        >
+          <DownloadIcon size={15} />
+        </button>
         <button className="icon-btn small" title="Thay bằng tài liệu khác" aria-label="Thay tài liệu" disabled={locked} onClick={onReplace}>
           <DocIcon size={15} />
         </button>
         <button className="icon-btn small" title="Gỡ tài liệu" aria-label="Gỡ tài liệu" disabled={locked} onClick={onRemove}>
           <CloseIcon size={15} />
+        </button>
+        <button className="icon-btn small ref-fold-notes" title="Thu gọn ghi chú (tài liệu chiếm hết chỗ)" aria-label="Thu gọn ghi chú" onClick={onFoldNotes}>
+          <ChevronsRightIcon size={15} />
         </button>
       </header>
       <div className="ref-scroll">

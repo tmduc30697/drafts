@@ -6,7 +6,7 @@ import {
   writeBatch,
 } from 'firebase/firestore';
 import { db } from '../firebase.js';
-import { buildList } from './tree.js';
+import { buildList, isCollection, nextOrderAt } from './tree.js';
 import { track } from './syncStatus.js';
 import { refRef } from './references.js';
 
@@ -27,21 +27,20 @@ async function commitInChunks(ops) {
   return Promise.all(commits);
 }
 
-// Order lớn nhất trong danh sách + 1 (để thêm vào cuối)
-export function nextOrder(pages) {
-  const { list } = buildList(pages);
-  return list.length ? list[list.length - 1].order + 1 : 1;
+// Order để thêm vào cuối một cấp (null = gốc, hoặc id collection)
+export function nextOrder(pages, parentId = null) {
+  return nextOrderAt(buildList(pages), parentId);
 }
 
-// Tạo trang mới ở cuối danh sách kèm document nội dung rỗng.
+// Tạo trang mới ở cuối gốc hoặc cuối một collection, kèm document nội dung rỗng.
 // Trả về id ngay (không chờ server, chạy được offline).
-export function createPage(uid, pages, { title = '', text = '' } = {}) {
+export function createPage(uid, pages, { title = '', text = '', parentId = null } = {}) {
   const ref = doc(pagesCol(uid));
   const batch = writeBatch(db);
   batch.set(ref, {
     title,
-    parentId: null, // danh sách phẳng, chưa dùng phân cấp
-    order: nextOrder(pages),
+    parentId,
+    order: nextOrder(pages, parentId),
     createdAt: serverTimestamp(),
     updatedAt: serverTimestamp(),
   });
@@ -51,15 +50,82 @@ export function createPage(uid, pages, { title = '', text = '' } = {}) {
   return ref.id;
 }
 
+// Tạo collection (nhóm trang, chỉ một cấp) ở cuối gốc. Không có nội dung. Trả về id ngay.
+export function createCollection(uid, pages, { title = '' } = {}) {
+  const ref = doc(pagesCol(uid));
+  track(
+    writeBatch(db)
+      .set(ref, {
+        kind: 'collection',
+        title,
+        parentId: null,
+        order: nextOrder(pages),
+        createdAt: serverTimestamp(),
+        updatedAt: serverTimestamp(),
+      })
+      .commit(),
+  );
+  return ref.id;
+}
+
+// Xóa vĩnh viễn collection cùng mọi trang bên trong (nội dung và tài liệu đính kèm của từng trang)
+export function deleteCollection(uid, pages, id) {
+  const children = buildList(pages).childrenOf.get(id) || [];
+  return commitInChunks([
+    (batch) => batch.delete(pageRef(uid, id)),
+    ...children.flatMap((p) => [
+      (batch) => batch.delete(pageRef(uid, p.id)),
+      (batch) => batch.delete(contentRef(uid, p.id)),
+      (batch) => batch.delete(refRef(uid, p.id)),
+    ]),
+  ]);
+}
+
+// Trang nào cũng phải thuộc một collection: gom các trang đang nằm ở gốc (dữ liệu trước khi có collection)
+// vào collection "Chung" (dùng lại nếu đã có), giữ nguyên thứ tự. Trả về id collection, không có gì để gom thì null.
+export const DEFAULT_COLLECTION = 'Chung';
+export function adoptRootPages(uid, pages) {
+  const tree = buildList(pages);
+  const roots = tree.items.filter((p) => !isCollection(p));
+  if (!roots.length) return null;
+  const existing = tree.items.find((p) => isCollection(p) && p.title === DEFAULT_COLLECTION);
+  const id = existing ? existing.id : doc(pagesCol(uid)).id;
+  const start = existing ? nextOrderAt(tree, id) : 1;
+  commitInChunks([
+    ...(existing
+      ? []
+      : [
+          (batch) =>
+            batch.set(pageRef(uid, id), {
+              kind: 'collection',
+              title: DEFAULT_COLLECTION,
+              parentId: null,
+              order: roots[0].order, // đứng đúng chỗ trang đầu tiên được gom
+              createdAt: serverTimestamp(),
+              updatedAt: serverTimestamp(),
+            }),
+        ]),
+    ...roots.map((p, i) => (batch) => batch.update(pageRef(uid, p.id), { parentId: id, order: start + i, updatedAt: serverTimestamp() })),
+  ]);
+  return id;
+}
+
 // Sửa metadata (vd. title) của một trang
 export function updatePage(uid, id, fields) {
   return track(updateDoc(pageRef(uid, id), { ...fields, updatedAt: serverTimestamp() }));
 }
 
-// Đổi thứ tự. `orders` là danh sách { id, order } cần ghi (nhiều trang khi phải đánh số lại)
+// Đổi thứ tự / chuyển cấp. `orders` là danh sách { id, order, parentId? } cần ghi
+// (nhiều mục khi phải đánh số lại; parentId có mặt khi mục chuyển vào / ra collection)
 export function reorderPages(uid, orders) {
   return commitInChunks(
-    orders.map(({ id, order }) => (batch) => batch.update(pageRef(uid, id), { order, updatedAt: serverTimestamp() })),
+    orders.map(({ id, order, parentId }) => (batch) =>
+      batch.update(pageRef(uid, id), {
+        order,
+        ...(parentId !== undefined ? { parentId } : {}),
+        updatedAt: serverTimestamp(),
+      }),
+    ),
   );
 }
 

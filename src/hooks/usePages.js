@@ -20,6 +20,7 @@ export function usePages(uid) {
           const data = d.data({ serverTimestamps: 'estimate' });
           return {
             id: d.id,
+            kind: data.kind === 'collection' ? 'collection' : 'page',
             title: data.title || '',
             preview: data.preview || '',
             parentId: data.parentId || null,
