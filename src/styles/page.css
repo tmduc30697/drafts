@@ -48,7 +48,7 @@
 }
 
 .text-editor .cm-scroller {
-  font-family: var(--font);
+  font-family: var(--font-mono);
   line-height: 1.65;
   overflow: visible;
 }
@@ -79,7 +79,7 @@
   --code-edge: inset 1px 0 var(--code-line), inset -1px 0 var(--code-line);
   position: relative;
   z-index: 0; /* để ::before (z-index -1) nằm dưới chữ nhưng trên nền dòng */
-  font-family: ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
+  font-family: var(--font-mono);
   font-size: var(--editor-fs);
   line-height: var(--editor-lh); /* bằng đúng một dòng chữ thường để số hàng cách đều */
   padding: 0 16px;
@@ -479,7 +479,7 @@
   border: 1px solid var(--border);
   border-radius: 8px;
   background: var(--bg-code);
-  font: var(--fs)/1.5 ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
+  font: var(--fs)/1.5 var(--font-mono);
   resize: vertical;
   outline: none;
 }
@@ -839,7 +839,7 @@
   border-radius: 4px;
   background: var(--bg-code);
   color: #c7254e;
-  font-family: ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
+  font-family: var(--font-mono);
   font-size: 1em;
 }
 
