@@ -194,7 +194,7 @@ body.dragging-split {
   display: flex;
   flex-direction: column;
   min-height: 100%;
-  padding: 8px 6px 12px;
+  padding: 8px 0 12px; /* không đệm ngang: nền các dòng trải hết chiều rộng sidebar */
 }
 
 /* Tài khoản ở dưới cùng sidebar */
@@ -215,9 +215,8 @@ body.dragging-split {
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 6px 8px;
+  padding: 6px 14px;
   margin-top: 12px;
-  border-radius: 6px;
   text-align: left;
   font-weight: 600;
   font-size: var(--fs);
@@ -255,8 +254,7 @@ body.dragging-split {
   gap: 8px;
   width: 100%;
   min-height: 30px;
-  padding: 4px 10px;
-  border-radius: 6px;
+  padding: 4px 16px;
   color: var(--text-muted);
   font-size: var(--fs);
   font-weight: 500;
@@ -272,23 +270,17 @@ body.dragging-split {
 .sidebar-head {
   display: flex;
   align-items: center;
+  justify-content: flex-end;
   gap: 4px;
-  padding-right: 4px;
-}
-
-.sidebar-head .sidebar-section {
-  flex: 1;
+  /* cao bằng .doc-toolbar để hai đường kẻ thẳng hàng; margin âm bù padding của .sidebar-inner */
+  height: 40px;
+  margin: -8px 0 0;
+  padding: 0 10px;
+  border-bottom: 1px solid var(--border);
 }
 
 .desktop-only {
   display: inline-flex;
-}
-
-.sidebar-section {
-  margin: 6px 10px 4px;
-  font-size: var(--fs);
-  font-weight: 600;
-  color: var(--text-faint);
 }
 
 .sidebar-tree {
@@ -302,8 +294,7 @@ body.dragging-split {
   align-items: center;
   gap: 2px;
   min-height: 30px;
-  padding: 0 4px 0 8px;
-  border-radius: 6px;
+  padding: 0 10px 0 14px;
   font-size: var(--fs);
   user-select: none;
   -webkit-user-select: none;
@@ -412,6 +403,17 @@ body.dragging-split {
   color: var(--danger);
 }
 
+.menu-item:disabled {
+  opacity: 0.4;
+  pointer-events: none;
+}
+
+.menu-sep {
+  height: 1px;
+  margin: 4px 6px;
+  background: var(--border);
+}
+
 /* Kéo thả trong danh sách */
 .tree-row.dragging {
   opacity: 0.4;
@@ -421,8 +423,8 @@ body.dragging-split {
 .tree-row.drop-after::after {
   content: '';
   position: absolute;
-  left: 8px;
-  right: 4px;
+  left: 14px;
+  right: 10px;
   height: 2px;
   border-radius: 1px;
   background: var(--accent);

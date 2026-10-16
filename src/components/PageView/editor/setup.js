@@ -1,5 +1,5 @@
 import { Compartment, EditorState } from '@codemirror/state';
-import { EditorView, keymap, highlightActiveLine, highlightActiveLineGutter, lineNumbers, placeholder } from '@codemirror/view';
+import { EditorView, keymap, highlightActiveLine, highlightActiveLineGutter, placeholder } from '@codemirror/view';
 import { defaultKeymap, deleteCharBackward, deleteCharForward, history, historyKeymap, indentWithTab, insertNewlineAndIndent } from '@codemirror/commands';
 import { HighlightStyle, syntaxHighlighting } from '@codemirror/language';
 import { markdown, insertNewlineContinueMarkupCommand, deleteMarkupBackward } from '@codemirror/lang-markdown';
@@ -7,6 +7,9 @@ import { languages } from '@codemirror/language-data';
 import { tags as t } from '@lezer/highlight';
 import { codeBlocks } from './codeBlocks.js';
 import { mermaidBlocks } from './mermaidBlocks.js';
+import { tables } from './tables.js';
+import { lineNumbering } from './lineNumbering.js';
+import { blockSelect } from './blockSelect.js';
 import { blockStyles } from './blockStyles.js';
 import { format, hiddenInline } from './format.js';
 import { hiddenLinks, links } from './links.js';
@@ -117,7 +120,7 @@ export function setLocked(view, locked) {
 export function editorExtensions({ onDocChange, locked = false }) {
   return [
     lockCompartment.of(lockExtension(locked)),
-    lineNumbers(),
+    lineNumbering,
     highlightActiveLine(),
     highlightActiveLineGutter(),
     history(),
@@ -126,6 +129,8 @@ export function editorExtensions({ onDocChange, locked = false }) {
     syntaxHighlighting(codeHighlight),
     codeBlocks,
     mermaidBlocks,
+    tables,
+    blockSelect,
     links,
     format,
     blockStyles,

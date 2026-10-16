@@ -69,37 +69,97 @@
   color: var(--text-faint);
 }
 
-/* Khối code kiểu Notion: nền xám, font monospace, thanh tiêu đề thay cho dòng ```,
-   dòng ``` đóng được ẩn (chỉ còn khoảng đệm dưới) */
+/* Khối code kiểu Notion: khung trắng có viền mảnh, font monospace, thanh tiêu đề thay cho dòng ```,
+   dòng ``` đóng được ẩn (chỉ còn khoảng đệm dưới).
+   Dòng vẫn rộng hết cột chữ; khung trắng vẽ bằng ::before rộng --code-w (kéo mép phải để đổi, mặc định hết cột).
+   Viền vẽ bằng box-shadow inset (CodeMirror không cho margin/viền làm đổi kích thước dòng):
+   mọi dòng có viền trái/phải, dòng đầu thêm viền trên, dòng cuối thêm viền dưới. */
 .text-editor .cm-codeblock {
-  background: var(--bg-code);
+  --code-line: var(--border);
+  --code-edge: inset 1px 0 var(--code-line), inset -1px 0 var(--code-line);
+  position: relative;
+  z-index: 0; /* để ::before (z-index -1) nằm dưới chữ nhưng trên nền dòng */
   font-family: ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
   font-size: var(--editor-fs);
   line-height: var(--editor-lh); /* bằng đúng một dòng chữ thường để số hàng cách đều */
   padding: 0 16px;
+  box-sizing: border-box;
+  /* Khung hẹp hơn cột: dòng vẫn rộng hết cột, đệm phải lớn để chữ xuống dòng ở mép khung.
+     Khung rộng hơn cột: dòng nới ra theo khung, tối đa tới gần mép phải vùng soạn thảo (--edit-extra). */
+  width: clamp(100%, var(--code-w, 100%), calc(100% + var(--edit-extra) - 16px));
+  padding-right: max(16px, calc(100% - var(--code-w, 100%) + 16px));
+  /* phần dòng nới ra quá cột chữ (--col-w do codeBlocks.js đo): dải chọn bên phải ngắn lại đúng bằng đó */
+  --code-over: max(0px, min(var(--code-w, 0px), calc(var(--col-w, 100000px) + var(--edit-extra) - 16px)) - var(--col-w, 100000px));
 }
 
-/* Lưu ý: CodeMirror không cho dùng margin trên dòng (sai phép đo), chỉ dùng padding */
+.text-editor .cm-codeblock::before {
+  content: '';
+  position: absolute;
+  z-index: -1;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  width: min(var(--code-w, 100%), 100%);
+  background: var(--bg);
+  box-shadow: var(--code-edge);
+  pointer-events: none;
+}
+
+/* Lưu ý: CodeMirror không cho dùng margin trên dòng (sai phép đo), chỉ dùng padding.
+   Dòng đầu / cuối có thêm 4px trống phía trên / dưới khung, giống khoảng cách quanh bảng. */
 .text-editor .cm-codeblock-begin {
-  height: var(--editor-lh);
-  padding-top: 0;
+  z-index: 1; /* tay nắm đổi độ rộng (nằm trong dòng đầu, cao hết khối) không bị các dòng dưới che */
+  height: calc(var(--editor-lh) + 4px);
+  padding-top: 4px;
   padding-bottom: 0;
-  border-top-left-radius: 6px;
-  border-top-right-radius: 6px;
+}
+
+.text-editor .cm-codeblock-begin::before {
+  top: 4px;
+  box-shadow: var(--code-edge), inset 0 1px var(--code-line);
 }
 
 .text-editor .cm-codeblock-end {
-  height: var(--editor-lh);
+  height: calc(var(--editor-lh) + 4px);
   line-height: 0;
   font-size: 0;
-  border-bottom-left-radius: 6px;
-  border-bottom-right-radius: 6px;
 }
 
-/* Khối chưa có dòng đóng ```: vẫn bo góc dưới */
 .text-editor .cm-codeblock-last {
-  border-bottom-left-radius: 6px;
-  border-bottom-right-radius: 6px;
+  padding-bottom: 4px;
+}
+
+/* Dòng cuối (kể cả khối chưa có dòng đóng ```): viền dưới */
+.text-editor .cm-codeblock-end::before,
+.text-editor .cm-codeblock-last::before {
+  bottom: 4px;
+  box-shadow: var(--code-edge), inset 0 -1px var(--code-line);
+}
+
+/* Tay nắm đổi độ rộng khối code: dải 7px nằm giữa mép phải khung, cao hết khối (chiều cao đặt trong codeBlocks.js) */
+.cm-codeblock-resize {
+  position: absolute;
+  top: 4px;
+  left: calc(min(var(--code-w, 100%), 100%) - 4px);
+  width: 7px;
+  cursor: col-resize;
+}
+
+.cm-codeblock-resize::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  width: 3px;
+  margin: auto;
+}
+
+.cm-codeblock-resize:hover::after,
+.cm-codeblock-resize.dragging::after {
+  background: var(--accent);
+}
+
+.cm-locked .cm-codeblock-resize {
+  display: none;
 }
 
 /* inline-flex rộng 100%: nằm gọn trên một dòng của CodeMirror */
@@ -165,15 +225,175 @@
   background: var(--bg-hover);
 }
 
+/* Bảng sửa trực tiếp (markdown bên dưới) */
+.cm-table {
+  position: relative;
+  /* Không dùng margin: CodeMirror không đo margin của widget. Viền trong suốt thì được đo. */
+  border: solid transparent;
+  border-width: 4px 0;
+  font-size: var(--fs);
+}
+
+.cm-table-scroll {
+  overflow-x: auto;
+  overflow-y: hidden; /* vạch kéo của hàng cuối thò xuống dưới bảng vài px: không tạo thanh cuộn dọc */
+}
+
+/* Bảng + nút xóa bảng bên phải */
+.cm-table-grid {
+  position: relative; /* gốc toạ độ cho vạch kéo đổi kích thước */
+  display: inline-grid;
+  grid-template-columns: auto 18px;
+  gap: 6px;
+  vertical-align: top;
+}
+
+.cm-table-remove {
+  align-self: start;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 18px;
+  border-radius: 4px;
+  color: var(--text-muted);
+  visibility: hidden;
+}
+
+.cm-table-remove:hover {
+  background: var(--bg-hover);
+  color: var(--danger);
+}
+
+.cm-table.hovering .cm-table-remove {
+  visibility: visible;
+}
+
+.cm-table table {
+  border-collapse: collapse;
+}
+
+.cm-table th,
+.cm-table td {
+  min-width: 100px;
+  max-width: 400px;
+  padding: 5px 10px;
+  border: 1px solid var(--border);
+  text-align: left;
+  vertical-align: top;
+  white-space: pre-wrap;
+  word-break: break-word;
+  outline: none;
+  cursor: text;
+  background: var(--bg); /* giữ nền ô khi cả khối được tô như dòng đang chọn */
+}
+
+.cm-table th {
+  background: var(--bg-code);
+  font-weight: 600;
+}
+
+.cm-table th:focus,
+.cm-table td:focus {
+  box-shadow: inset 0 0 0 2px var(--accent);
+}
+
+/* Tay nắm hàng / cột: nằm đè lên mép trái hàng / mép trên cột */
+.cm-table-handle {
+  position: absolute;
+  z-index: 2;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  transform: translate(-50%, -50%);
+  border-radius: 4px;
+  background: var(--bg);
+  box-shadow: 0 0 0 1px var(--border);
+  color: var(--text-faint);
+}
+
+.cm-table-handle-row {
+  width: 14px;
+  height: 22px;
+}
+
+.cm-table-handle-col {
+  width: 22px;
+  height: 14px;
+}
+
+.cm-table-handle:hover {
+  background: var(--bg-hover);
+  color: var(--text-muted);
+}
+
+.cm-table.hovering .cm-table-handle {
+  display: flex;
+}
+
+/* Vạch kéo đổi độ rộng cột / chiều cao hàng: vùng bắt chuột 7px nằm giữa đường viền, hiện vạch xanh khi rê vào */
+.cm-table-resize {
+  position: absolute;
+  z-index: 1;
+}
+
+.cm-table-resize-col {
+  width: 7px;
+  margin-left: -4px;
+  cursor: col-resize;
+}
+
+.cm-table-resize-row {
+  height: 7px;
+  margin-top: -4px;
+  cursor: row-resize;
+}
+
+.cm-table-resize::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  margin: auto;
+}
+
+.cm-table-resize-col::after {
+  width: 3px;
+}
+
+.cm-table-resize-row::after {
+  height: 3px;
+}
+
+.cm-table-resize:hover::after,
+.cm-table-resize:active::after {
+  background: var(--accent);
+}
+
+/* Đang kéo: ẩn tay nắm, giữ con trỏ chuột đổi kích thước */
+.cm-table.resizing .cm-table-handle {
+  display: none;
+}
+
+/* Trang khóa: chỉ đọc, không có nút thao tác */
+.cm-locked .cm-table th,
+.cm-locked .cm-table td {
+  cursor: default;
+}
+
+.cm-locked .cm-table .cm-table-remove,
+.cm-locked .cm-table .cm-table-resize,
+.cm-locked .cm-table .cm-table-handle {
+  display: none;
+}
+
 /* Sơ đồ Mermaid trong trang */
 .cm-mermaid {
   /* Không dùng margin: CodeMirror không đo margin của widget nên số hàng bên dưới sẽ lệch. Viền trong suốt thì được đo. */
   border: solid transparent;
   border-width: 4px 0;
   padding: 6px 16px 16px;
-  border-radius: 6px;
-  background: var(--bg-code);
+  background: var(--bg);
   background-clip: padding-box; /* sau shorthand background, nếu không sẽ bị đặt lại */
+  box-shadow: inset 0 0 0 1px var(--border); /* viền mảnh như khối code (inset: nằm trong vùng nền) */
 }
 
 .cm-mermaid-toolbar {
@@ -372,6 +592,13 @@
   user-select: none;
 }
 
+/* Số của khối code: nằm ở dòng đầu khối, dịch xuống giữa khối (top đặt trong lineNumbering.js);
+   z-index để không bị nền của ô số các dòng bên dưới che */
+.cm-block-number {
+  position: relative;
+  z-index: 1;
+}
+
 /* Desktop: lề số hàng kiểu Sublime — dải dọc sát mép trái vùng soạn thảo, cao suốt trang,
    có vạch kẻ ngăn với nội dung. Cột chữ dính sát dải. */
 @media (min-width: 768px) {
@@ -405,15 +632,9 @@
     padding-left: 0;
   }
 
-  /* Khối code và sơ đồ: khoảng 4px bên trái trong suốt, nền chỉ tô từ đó (thẳng hàng với chữ) */
+  /* Khối code: khung sát lề trái, thẳng hàng với chữ và bảng */
   .text-editor .cm-codeblock {
     padding-left: 16px;
-    border-left: 4px solid transparent;
-    background-clip: padding-box;
-  }
-
-  .cm-mermaid {
-    border-left-width: 4px;
   }
 }
 
@@ -444,10 +665,68 @@
   pointer-events: none;
 }
 
+/* Đang chọn cả khối (bấm ra ngoài khung): ẩn con trỏ nhấp nháy, xem blockSelect.js */
+.text-editor .cm-blockSelected {
+  caret-color: transparent;
+}
+
+/* Khối đang được chọn (bảng, sơ đồ Mermaid, khối code chứa con trỏ): tô cả khối như dòng đang chọn */
+.text-editor .cm-table.cm-activeBlock {
+  background-color: var(--bg-hover);
+}
+
+/* Khối có khung riêng: giữ nền trắng của khung, tô phần xung quanh; viền khung đậm hơn dải chọn để khung nổi lên */
+.text-editor .cm-mermaid.cm-activeBlock {
+  position: relative;
+  background: linear-gradient(var(--bg), var(--bg)) padding-box, var(--bg-hover) border-box;
+  box-shadow: inset 0 0 0 1px var(--border-strong);
+}
+
+.text-editor .cm-codeblock.cm-activeBlockLine {
+  --code-line: var(--border-strong);
+  background: var(--bg-hover);
+}
+
+.text-editor .cm-table.cm-activeBlock::after,
+.text-editor .cm-mermaid.cm-activeBlock::after,
+.text-editor .cm-codeblock.cm-activeBlockLine::after {
+  content: '';
+  position: absolute;
+  left: 100%;
+  top: 0;
+  bottom: 0;
+  width: 0;
+  background-color: var(--bg-hover);
+  pointer-events: none;
+}
+
+/* Bảng / Mermaid có viền trong suốt 4px trên dưới: dải kéo dài phủ cả phần đó (absolute tính từ mép trong viền) */
+.text-editor .cm-table.cm-activeBlock::after,
+.text-editor .cm-mermaid.cm-activeBlock::after {
+  top: -4px;
+  bottom: -4px;
+}
+
+/* Bề rộng phần vùng soạn thảo bên phải cột chữ (điện thoại: không có) */
+.text-editor {
+  --edit-extra: 0px;
+}
+
 @media (min-width: 768px) {
-  .text-editor .cm-activeLine:not(.cm-codeblock)::after {
-    /* phần còn lại của vùng soạn thảo bên phải cột chữ (không vượt quá mép phải nên không sinh thanh cuộn ngang) */
-    width: max(0px, calc(100cqw - 41px - var(--content-max) - var(--page-pad)));
+  .text-editor {
+    /* không vượt quá mép phải nên không sinh thanh cuộn ngang */
+    --edit-extra: max(0px, calc(100cqw - 41px - var(--content-max) - var(--page-pad)));
+  }
+
+  .text-editor .cm-activeLine:not(.cm-codeblock)::after,
+  .text-editor .cm-table.cm-activeBlock::after,
+  .text-editor .cm-mermaid.cm-activeBlock::after {
+    width: var(--edit-extra);
+  }
+
+  /* dòng code có thể đã nới rộng quá cột chữ */
+  .text-editor .cm-codeblock.cm-activeBlockLine::after {
+    width: max(0px, calc(var(--edit-extra) - var(--code-over)));
   }
 }
 

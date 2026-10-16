@@ -4,6 +4,7 @@ import { syntaxTree } from '@codemirror/language';
 import { renderMermaid } from './mermaid.js';
 import { openMermaidDialog } from './mermaidDialog.js';
 import { EditIcon, CloseIcon } from './editorIcons.js';
+import { selectBlock } from './blockSelect.js';
 
 // Khối ```mermaid ... ``` (đã đóng) được thay bằng sơ đồ đã render.
 // Bấm vào sơ đồ hoặc nút Sửa để mở popup sửa code; nút Xóa để bỏ cả khối.
@@ -69,9 +70,11 @@ class MermaidWidget extends WidgetType {
     wrap.className = 'cm-mermaid';
 
     const edit = () => {
-      if (view.state.readOnly) return;
       const block = blockAt(view.state, view.posAtDOM(wrap));
       if (!block) return;
+      // Bấm vào sơ đồ: chọn khối này (tô như dòng đang chọn)
+      selectBlock(view, block.from);
+      if (view.state.readOnly) return;
       openMermaidDialog({
         code: block.code,
         submitLabel: 'Lưu',

@@ -32,7 +32,7 @@ function PageRow({ page, ctx }) {
           <span className="tree-icon">
             <DocIcon size={16} />
           </span>
-          <TitleInput initial={title} onDone={finish} onCancel={() => setEditing(false)} />
+          <TitleInput initial={page.title} onDone={finish} onCancel={() => setEditing(false)} />
         </div>
       ) : (
         <a

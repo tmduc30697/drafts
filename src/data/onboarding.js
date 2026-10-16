@@ -11,6 +11,7 @@ const GUIDE = `Chào mừng đến với Drafts: nơi ghi chú nhanh, đồng b�
 Soạn thảo
 - Gõ như Notepad. Dòng bắt đầu bằng "- " hoặc "1. " thì Enter sẽ tự thêm "- " hoặc số tiếp theo.
 - Enter ở dòng gạch đầu dòng trống để thoát danh sách.
+- Bảng: bấm nút bảng trên thanh công cụ rồi gõ thẳng vào ô. Tab sang ô kế, Enter xuống hàng dưới. Rê chuột vào bảng để thêm/xóa hàng, cột.
 - Dùng thanh công cụ phía trên để định dạng chữ, chèn khối code hoặc sơ đồ Mermaid. Ví dụ khối code:
 
 \`\`\`js

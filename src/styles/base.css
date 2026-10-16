@@ -9,6 +9,7 @@
   --text-muted: rgba(55, 53, 47, 0.6);
   --text-faint: rgba(55, 53, 47, 0.35);
   --border: rgba(55, 53, 47, 0.12);
+  --border-strong: rgba(55, 53, 47, 0.24); /* viền khối đang chọn: nổi trên dải chọn */
   --accent: #2383e2;
   --danger: #eb5757;
   --shadow: 0 8px 28px rgba(15, 15, 15, 0.14), 0 0 0 1px rgba(15, 15, 15, 0.05);

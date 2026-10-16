@@ -2,15 +2,17 @@ import { useEffect, useRef, useState } from 'react';
 import { onSnapshot } from 'firebase/firestore';
 import { EditorState, Transaction } from '@codemirror/state';
 import { EditorView } from '@codemirror/view';
-import { contentRef } from '../../data/pages.js';
-import { contentText, MAX_CONTENT_BYTES, saveContent } from '../../data/contents.js';
+import { contentRef, updatePage } from '../../data/pages.js';
+import { contentPreview, contentText, MAX_CONTENT_BYTES, saveContent } from '../../data/contents.js';
 import { useDebouncedSaver } from '../../hooks/useDebouncedSaver.js';
 import { editorExtensions, setLocked } from './editor/setup.js';
+import { blockAt } from './editor/lineNumbering.js';
+import { selectBlock } from './editor/blockSelect.js';
 
 const byteLength = (s) => new TextEncoder().encode(s).length;
 
 // Tải nội dung trang rồi mới dựng editor
-export default function Editor({ uid, pageId, onReady, locked = false }) {
+export default function Editor({ uid, pageId, preview, onReady, locked = false }) {
   const [initial, setInitial] = useState(null); // { text } | { missing: true } | { error: true }
   // Hàm xử lý snapshot của editor đã dựng; trước khi nó gắn vào thì giữ snapshot mới nhất ở pending
   const snapshotHandler = useRef({ handle: null, pending: null });
@@ -55,6 +57,7 @@ export default function Editor({ uid, pageId, onReady, locked = false }) {
     <LoadedEditor
       uid={uid}
       pageId={pageId}
+      preview={preview}
       initialText={initial.text}
       snapshotHandler={snapshotHandler}
       onReady={onReady}
@@ -63,12 +66,20 @@ export default function Editor({ uid, pageId, onReady, locked = false }) {
   );
 }
 
-function LoadedEditor({ uid, pageId, initialText, snapshotHandler, onReady, locked }) {
+function LoadedEditor({ uid, pageId, preview, initialText, snapshotHandler, onReady, locked }) {
   const host = useRef(null);
   const viewRef = useRef(null);
   const [tooLarge, setTooLarge] = useState(false);
   // Văn bản đã lưu/đã áp gần nhất, để nhận ra snapshot "không có gì mới"
   const lastKnown = useRef(initialText);
+  // Vài từ đầu đã ghi vào metadata trang (sidebar dùng làm tên khi chưa đặt tên)
+  const lastPreview = useRef(preview);
+  const syncPreview = (text) => {
+    const next = contentPreview(text);
+    if (next === lastPreview.current) return;
+    lastPreview.current = next;
+    updatePage(uid, pageId, { preview: next });
+  };
 
   const saver = useDebouncedSaver(() => {
     const view = viewRef.current;
@@ -82,7 +93,14 @@ function LoadedEditor({ uid, pageId, initialText, snapshotHandler, onReady, lock
     setTooLarge(false);
     lastKnown.current = text;
     saveContent(uid, pageId, text);
+    syncPreview(text);
   });
+
+  // Trang tạo trước khi có tính năng này: bổ sung khi mở
+  useEffect(() => {
+    if (!locked) syncPreview(initialText);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // Dựng CodeMirror một lần cho mỗi trang (component được key theo pageId)
   useEffect(() => {
@@ -107,6 +125,31 @@ function LoadedEditor({ uid, pageId, initialText, snapshotHandler, onReady, lock
     };
     // initialText chỉ dùng lúc dựng; saver/onReady ổn định
     // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Bấm vào vùng trống bên phải cột chữ (ngoài editor): chọn dòng / khối nằm ngang chỗ bấm, như bấm vào cuối dòng đó
+  useEffect(() => {
+    const view = viewRef.current;
+    const area = view?.dom.closest('.content');
+    if (!area) return undefined;
+    const onDown = (e) => {
+      if (e.button !== 0 || view.dom.contains(e.target) || e.target.closest('.doc-toolbar')) return;
+      const box = view.contentDOM.getBoundingClientRect();
+      if (e.clientX <= box.right || e.clientY < box.top) return;
+      const pos = view.posAtCoords({ x: box.right - 2, y: e.clientY });
+      if (pos == null) return;
+      e.preventDefault();
+      // Ngang bảng / Mermaid / khối code: chọn cả khối (không hiện con trỏ trong khối)
+      const block = blockAt(view.state, pos);
+      if (block) {
+        selectBlock(view, view.state.doc.line(block.first).from);
+        return;
+      }
+      view.focus();
+      view.dispatch({ selection: { anchor: pos } });
+    };
+    area.addEventListener('mousedown', onDown);
+    return () => area.removeEventListener('mousedown', onDown);
   }, []);
 
   // Khóa/mở khóa trang khi đang mở

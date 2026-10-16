@@ -94,7 +94,6 @@ export default function Sidebar({ user, list, ctx, collapsed, onToggle }) {
   return (
     <nav className="sidebar-inner">
       <div className="sidebar-head">
-        <span className="sidebar-section">Trang</span>
         <span className="desktop-only">
           <SyncIndicator />
         </span>

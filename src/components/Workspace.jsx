@@ -64,7 +64,8 @@ export default function Workspace({ user }) {
   const ctx = useMemo(
     () => ({
       currentId,
-      titleOf: (p) => p.title,
+      // Chưa đặt tên thì dùng vài từ đầu của nội dung
+      titleOf: (p) => p.title || p.preview,
       onRename: (page, title) => {
         if (page.locked) return;
         if (title !== page.title) updatePage(uid, page.id, { title });
@@ -77,7 +78,7 @@ export default function Workspace({ user }) {
       onDelete: (page) => {
         if (page.locked) return;
         // Xóa hẳn (không có thùng rác) nên hỏi lại trước
-        const title = page.title;
+        const title = page.title || page.preview;
         if (!window.confirm(`Xóa "${title || UNTITLED}"? Trang sẽ bị xóa vĩnh viễn.`)) return;
         const id = page.id;
         // Đang mở trang bị xóa thì chuyển sang trang kế bên (dưới, không có thì trên).

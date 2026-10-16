@@ -83,14 +83,14 @@ export default function PageView({ uid, page }) {
       <div className="content">
         <Toolbar
           view={view}
-          title={page.title}
+          title={page.title || page.preview}
           locked={locked}
           hasRef={!!ref}
           onImport={() => fileInput.current.click()}
           onToggleLock={() => updatePage(uid, page.id, { locked: !locked })}
         />
         <article className="page">
-          <Editor uid={uid} pageId={page.id} onReady={onEditorReady} locked={locked} />
+          <Editor uid={uid} pageId={page.id} preview={page.preview} onReady={onEditorReady} locked={locked} />
         </article>
       </div>
     </>

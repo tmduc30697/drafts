@@ -107,6 +107,12 @@ export const CodeBlockIcon = (p) => (
     <path d="M10 9l-2.5 3 2.5 3M14 9l2.5 3-2.5 3" />
   </Svg>
 );
+export const TableIcon = (p) => (
+  <Svg {...p}>
+    <rect x="3" y="4" width="18" height="16" rx="2" />
+    <path d="M3 10h18M9 4v16" />
+  </Svg>
+);
 // Icon Mermaid (nàng tiên cá): thân uốn cong kết thúc bằng đuôi cá
 export const MermaidIcon = (p) => (
   <Svg {...p}>
