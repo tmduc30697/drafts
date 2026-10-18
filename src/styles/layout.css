@@ -728,3 +728,16 @@ body.dragging-split {
 .sidebar-head.foldable:hover {
   background-image: linear-gradient(var(--bg-hover), var(--bg-hover));
 }
+
+/* Dải thu gọn của sidebar: bấm vào đâu (ngoài avatar) cũng mở lại */
+.sidebar-rail.foldable {
+  cursor: pointer;
+}
+
+.sidebar-rail.foldable:hover {
+  background-image: linear-gradient(var(--bg-hover), var(--bg-hover));
+}
+
+.sidebar-rail.foldable .rail-user {
+  cursor: pointer;
+}

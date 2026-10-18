@@ -1,6 +1,8 @@
-import { Compartment, EditorState } from '@codemirror/state';
-import { EditorView, keymap, highlightActiveLine, highlightActiveLineGutter, placeholder } from '@codemirror/view';
+import { Compartment, EditorSelection, EditorState } from '@codemirror/state';
+import { EditorView, drawSelection, keymap, highlightActiveLine, highlightActiveLineGutter, placeholder } from '@codemirror/view';
 import { defaultKeymap, deleteCharBackward, deleteCharForward, history, historyKeymap, indentWithTab, insertNewlineAndIndent } from '@codemirror/commands';
+import { highlightSelectionMatches, search, searchKeymap } from '@codemirror/search';
+import { createSearchPanel } from './searchPanel.js';
 import { HighlightStyle, syntaxHighlighting } from '@codemirror/language';
 import { markdown, insertNewlineContinueMarkupCommand, deleteMarkupBackward } from '@codemirror/lang-markdown';
 import { languages } from '@codemirror/language-data';
@@ -89,7 +91,65 @@ function deleteOverHidden(view) {
   return deleteCharForward(view);
 }
 
+// ⌘D / Ctrl+D (như Sublime Text): chưa chọn gì thì chọn từ đang đặt con trỏ; đang chọn một đoạn thì thêm vùng chọn kế tiếp
+// có cùng nội dung (tìm từ vùng chọn gần nhất, hết trang thì quay lại đầu)
+function selectNextOccurrence(view) {
+  const { state } = view;
+  if (!state.facet(EditorState.allowMultipleSelections)) return false; // trang khóa
+  const main = state.selection.main;
+  if (main.empty) {
+    const word = state.wordAt(main.head);
+    if (!word) return false;
+    view.dispatch({ selection: EditorSelection.single(word.from, word.to), scrollIntoView: true });
+    return true;
+  }
+  const text = state.sliceDoc(main.from, main.to);
+  const doc = state.doc.toString();
+  // Mọi vị trí xuất hiện của đoạn đang chọn
+  const starts = [];
+  for (let i = doc.indexOf(text); i >= 0; i = doc.indexOf(text, i + text.length)) starts.push(i);
+  const taken = (from) => state.selection.ranges.some((r) => r.from === from);
+  // Ưu tiên chỗ trùng đầu tiên phía sau vùng chọn hiện tại, hết thì quay lại từ đầu trang; chọn hết rồi thì thôi
+  const at = starts.find((i) => i >= main.to && !taken(i)) ?? starts.find((i) => !taken(i));
+  if (at === undefined) return true;
+  view.dispatch({
+    selection: EditorSelection.create([...state.selection.ranges, EditorSelection.range(at, at + text.length)], state.selection.ranges.length),
+    scrollIntoView: true,
+  });
+  return true;
+}
+
+// Ô tìm kiếm (⌘F / Ctrl+F) như Sublime Text (searchPanel.js): regex / phân biệt hoa thường / cả từ, Tìm, Tìm trước, Tất cả. Bỏ ⌘D của thư viện vì app có ⌘D riêng.
+const searchExtensions = [
+  search({ top: false, createPanel: createSearchPanel }), // ô tìm kiểu Sublime, nằm ở dưới cùng
+  // Bôi chọn một đoạn chữ thì các chỗ khớp khác hiện khung bao quanh (như Sublime Text)
+  highlightSelectionMatches({ minSelectionLength: 2 }),
+  keymap.of(searchKeymap.filter((k) => k.key !== 'Mod-d')),
+];
+
+// Alt+Enter (như Sublime Text): chọn tất cả các chỗ trùng với đoạn đang chọn (chưa chọn gì thì lấy từ đang đặt con trỏ)
+function selectAllOccurrences(view) {
+  const { state } = view;
+  if (!state.facet(EditorState.allowMultipleSelections)) return false; // trang khóa
+  let main = state.selection.main;
+  if (main.empty) {
+    const word = state.wordAt(main.head);
+    if (!word) return false;
+    main = EditorSelection.range(word.from, word.to);
+  }
+  const text = state.sliceDoc(main.from, main.to);
+  const doc = state.doc.toString();
+  const ranges = [];
+  for (let i = doc.indexOf(text); i >= 0; i = doc.indexOf(text, i + text.length)) ranges.push(EditorSelection.range(i, i + text.length));
+  // Vùng chọn chính là chỗ đang chọn (hoặc chỗ trùng đầu tiên trên từ đang đứng)
+  const index = Math.max(0, ranges.findIndex((r) => r.from === main.from));
+  view.dispatch({ selection: EditorSelection.create(ranges, index), scrollIntoView: true });
+  return true;
+}
+
 const listKeymap = keymap.of([
+  { key: 'Mod-d', run: selectNextOccurrence, preventDefault: true },
+  { key: 'Alt-Enter', run: selectAllOccurrences, preventDefault: true },
   // Lệnh markdown không làm gì trong khối code: khi đó rơi xuống Enter thường (giữ thụt lề)
   { key: 'Enter', run: (view) => continueBlock(view) || continueList(view) || insertNewlineAndIndent(view) },
   { key: 'Backspace', run: (view) => backspaceOverHidden(view) || deleteMarkupBackward(view) },
@@ -110,8 +170,12 @@ const codeHighlight = HighlightStyle.define([
 
 // Khóa trang: chỉ đọc (không gõ, không sửa/xóa khối), vẫn chọn và sao chép được
 const lockCompartment = new Compartment();
+// Trang mở khóa: nhiều con trỏ (⌘/Ctrl + bấm chuột thêm một con trỏ; drawSelection để vẽ được nhiều con trỏ/vùng chọn).
+// Trang khóa: chỉ đọc, dùng vùng chọn mặc định của trình duyệt (không vẽ lại, để bôi chọn trong tài liệu chỉ đọc vẫn thấy).
 const lockExtension = (locked) =>
-  locked ? [EditorState.readOnly.of(true), EditorView.editable.of(false), EditorView.editorAttributes.of({ class: 'cm-locked' })] : [];
+  locked
+    ? [EditorState.readOnly.of(true), EditorView.editable.of(false), EditorView.editorAttributes.of({ class: 'cm-locked' })]
+    : [EditorState.allowMultipleSelections.of(true), drawSelection(), EditorView.clickAddsSelectionRange.of((e) => e.metaKey || e.ctrlKey)];
 
 export function setLocked(view, locked) {
   view.dispatch({ effects: lockCompartment.reconfigure(lockExtension(locked)) });
@@ -121,6 +185,7 @@ export function setLocked(view, locked) {
 export function editorExtensions({ onDocChange, locked = false }) {
   return [
     lockCompartment.of(lockExtension(locked)),
+    ...searchExtensions,
     lineNumbering,
     highlightActiveLine(),
     highlightActiveLineGutter(),

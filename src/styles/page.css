@@ -1124,3 +1124,157 @@
 .doc-toolbar.foldable:hover {
   background-image: linear-gradient(var(--bg-hover), var(--bg-hover));
 }
+
+/* Vùng chọn và con trỏ do CodeMirror vẽ (hỗ trợ nhiều con trỏ): giữ màu như vùng chọn mặc định của trình duyệt */
+.text-editor .cm-editor .cm-selectionBackground,
+.text-editor .cm-editor.cm-focused > .cm-scroller > .cm-selectionLayer .cm-selectionBackground {
+  background: rgba(35, 131, 226, 0.28);
+}
+
+.text-editor .cm-editor .cm-cursor,
+.text-editor .cm-editor .cm-dropCursor {
+  border-left: 1.4px solid var(--text);
+}
+
+/* Ô tìm kiếm (⌘F) */
+.cm-editor .cm-panels {
+  /* kéo ô tìm ra sát mép phải: bù khoảng đệm bên phải của khung soạn thảo (.text-editor) */
+  margin-right: calc(-1 * var(--page-pad, 0px));
+  background: var(--bg-sidebar);
+  color: var(--text);
+  border-color: var(--border);
+  font-family: var(--font);
+  font-size: var(--fs);
+}
+
+/* ô tìm dính ở đáy vùng nhìn thấy (đáy của khung cuộn) */
+.cm-editor .cm-panels-bottom {
+  bottom: 0;
+  border-top: 1px solid var(--border);
+  box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.06);
+}
+
+.cm-editor .sf-bar {
+  padding: 6px 10px 2px;
+}
+
+/* bỏ khoảng cách mặc định của theme CodeMirror cho ô tìm */
+.cm-editor .sf-bar input,
+.cm-editor .sf-bar button {
+  margin: 0;
+}
+
+.cm-editor .sf-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.cm-editor .sf-toggles {
+  display: flex;
+  gap: 2px;
+}
+
+.cm-editor .sf-toggle {
+  min-width: 28px;
+  height: 26px;
+  padding: 0 6px;
+  border-radius: 4px;
+  color: var(--text-muted);
+  font: inherit;
+  font-size: var(--fs);
+}
+
+.cm-editor .sf-toggle:hover {
+  background: var(--bg-hover);
+}
+
+.cm-editor .sf-toggle[aria-pressed='true'] {
+  background: var(--bg-active);
+  color: var(--text);
+}
+
+.cm-editor .sf-input {
+  flex: 1;
+  min-width: 0;
+  height: 28px;
+  padding: 0 8px;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  background: var(--bg);
+  color: var(--text);
+  font: inherit;
+  font-size: var(--fs);
+  outline: none;
+}
+
+.cm-editor .sf-input:focus {
+  border-color: var(--text-muted);
+}
+
+.cm-editor .sf-btn {
+  height: 28px;
+  padding: 0 14px;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  background: var(--bg);
+  color: var(--text);
+  font: inherit;
+  font-size: var(--fs);
+  white-space: nowrap;
+}
+
+.cm-editor .sf-btn:hover {
+  background: var(--bg-hover);
+}
+
+.cm-editor .sf-status {
+  min-height: 16px;
+  padding: 1px 4px 4px;
+  color: var(--text-muted);
+  font-size: calc(var(--fs) * 0.7); /* nhỏ hơn chữ thường */
+  line-height: 1.3;
+}
+
+/* kết quả tìm được: vàng nhạt; kết quả đang chọn đậm hơn */
+.cm-editor .cm-searchMatch {
+  background: rgba(255, 213, 0, 0.35);
+  outline: none;
+}
+
+.cm-editor .cm-searchMatch.cm-searchMatch-selected {
+  background: rgba(255, 150, 0, 0.5);
+}
+
+/* Các chỗ khớp với đoạn đang chọn: khung bao, không tô nền (như Sublime Text) */
+.cm-editor .cm-selectionMatch {
+  background: transparent;
+  border-radius: 3px;
+  outline: 1px solid rgba(35, 131, 226, 0.55);
+  outline-offset: -1px;
+}
+
+/* Thu gọn theo tiêu đề: bấm vào số hàng của tiêu đề */
+.cm-foldable-ln {
+  cursor: pointer;
+}
+
+.cm-foldable-ln:hover {
+  color: var(--text);
+}
+
+.cm-fold-placeholder {
+  display: inline-block;
+  margin: 0 6px;
+  padding: 0 7px;
+  border-radius: 4px;
+  background: var(--bg-hover);
+  color: var(--text-muted);
+  line-height: 1.2;
+  cursor: pointer;
+}
+
+.cm-fold-placeholder:hover {
+  background: var(--bg-active);
+  color: var(--text);
+}

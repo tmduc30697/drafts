@@ -1,7 +1,7 @@
 import { useState, useSyncExternalStore } from 'react';
 import { signOut } from 'firebase/auth';
 import { auth } from '../../firebase.js';
-import { FolderIcon, LogoutIcon, RestoreIcon, ChevronsLeftIcon, ChevronsRightIcon } from '../icons.jsx';
+import { FolderIcon, LogoutIcon, RestoreIcon } from '../icons.jsx';
 import { APP_VERSION, BUILD_TIME, checkForUpdate } from '../../lib/updates.js';
 import Menu from '../Menu.jsx';
 import SyncIndicator from '../SyncIndicator.jsx';
@@ -58,12 +58,14 @@ export default function Sidebar({ user, tree, ctx, collapsed, onToggle }) {
 
   if (rail) {
     return (
-      <nav className="sidebar-rail">
-        <button className="icon-btn small" aria-label="Mở sidebar" title="Mở sidebar" onClick={onToggle}>
-          <ChevronsRightIcon size={16} />
-        </button>
-        {/* khoảng trống đẩy avatar xuống đáy */}
-        <div className="rail-pages" />
+      // Đang thu gọn: bấm vào bất kỳ chỗ nào của dải (trừ avatar) để mở lại sidebar
+      <nav
+        className="sidebar-rail foldable"
+        title="Bấm để mở sidebar"
+        onClick={(e) => {
+          if (!e.target.closest('button')) onToggle();
+        }}
+      >
         <button className="rail-btn rail-user" aria-label="Tài khoản" title={user.displayName || user.email} onClick={toggleUserMenu}>
           <Avatar user={user} />
         </button>
@@ -89,9 +91,6 @@ export default function Sidebar({ user, tree, ctx, collapsed, onToggle }) {
         <span className="desktop-only">
           <SyncIndicator />
         </span>
-        <button className="icon-btn small" aria-label="Thu gọn sidebar" title="Thu gọn sidebar" onClick={onToggle}>
-          <ChevronsLeftIcon size={16} />
-        </button>
       </div>
       <div className="sidebar-tree">
         <ListDnd uid={user.uid} tree={tree} titleOf={ctx.titleOf} onDropInside={ctx.expand}>

@@ -124,18 +124,27 @@ export default function Workspace({ user }) {
 
   // Trang nào cũng phải thuộc một collection: trang còn nằm ở gốc (dữ liệu cũ, hoặc tạo từ bản app cũ trên máy khác)
   // được gom vào collection "Chung". Chờ lần gom trước ghi xong (hết trang ở gốc) mới gom tiếp, tránh tạo trùng.
-  const adopting = useRef(false);
+  // Trạng thái gom: 'idle' | 'running' | 'failed'. Nếu lần ghi bị server từ chối (vd. trang còn trong cache nhưng đã bị xóa ở máy khác)
+  // thì KHÔNG thử lại trong phiên này: nếu không, app sẽ tự hoàn tác rồi thử mãi, icon đồng bộ xoay và nháy không dừng.
+  const adoptState = useRef('idle');
   const rootPages = tree.items.filter((p) => !isCollection(p)).length;
   useEffect(() => {
-    if (!loaded) return;
-    if (!rootPages) {
-      adopting.current = false;
+    if (!loaded || !rootPages || adoptState.current !== 'idle') return;
+    adoptState.current = 'running';
+    const result = adoptRootPages(uid, pages);
+    if (!result) {
+      adoptState.current = 'idle';
       return;
     }
-    if (adopting.current) return;
-    adopting.current = true;
-    const id = adoptRootPages(uid, pages);
-    if (id) setExpandedSaved((s) => s.add(id));
+    setExpandedSaved((s) => s.add(result.id));
+    result.done.then(
+      () => {
+        adoptState.current = 'idle';
+      },
+      () => {
+        adoptState.current = 'failed';
+      },
+    );
   }, [loaded, rootPages, uid, pages, setExpandedSaved]);
 
   // Tài khoản mới: tạo trang "Bắt đầu" (kiểm tra một lần mỗi phiên, sau khi đã có danh sách trang)

@@ -12,6 +12,7 @@ import {
 } from '@codemirror/view';
 import { syntaxTree } from '@codemirror/language';
 import { findTables } from './tables.js';
+import { toggleHeadingFoldAt } from './headings.js';
 
 // Số dòng theo cách hiển thị: mỗi khối đặc biệt (bảng, sơ đồ Mermaid, khối code) tính là một dòng.
 // Khối chiếm dòng 3–6 của văn bản thì hiện số 3 (căn giữa theo chiều cao khối), dòng ngay sau khối là 4.
@@ -195,5 +196,13 @@ export const lineNumbering = [
   lineNumbers({
     // Số lớn hơn số dòng thật chỉ dùng để đo độ rộng gutter: giữ nguyên
     formatNumber: (n, state) => String(n > state.doc.lines ? n : visualNumber(state.field(blockField).blocks, n)),
+    // Bấm vào số hàng của một tiêu đề: gập / mở phần nội dung của tiêu đề đó
+    domEventHandlers: {
+      mousedown: (view, line, event) => {
+        if (event.button !== 0 || !toggleHeadingFoldAt(view, line.from)) return false;
+        event.preventDefault();
+        return true;
+      },
+    },
   }),
 ];

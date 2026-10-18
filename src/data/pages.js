@@ -82,7 +82,7 @@ export function deleteCollection(uid, pages, id) {
 }
 
 // Trang nào cũng phải thuộc một collection: gom các trang đang nằm ở gốc (dữ liệu trước khi có collection)
-// vào collection "Chung" (dùng lại nếu đã có), giữ nguyên thứ tự. Trả về id collection, không có gì để gom thì null.
+// vào collection "Chung" (dùng lại nếu đã có), giữ nguyên thứ tự. Trả về { id collection, done: promise kết quả ghi }, không có gì để gom thì null.
 export const DEFAULT_COLLECTION = 'Chung';
 export function adoptRootPages(uid, pages) {
   const tree = buildList(pages);
@@ -91,7 +91,7 @@ export function adoptRootPages(uid, pages) {
   const existing = tree.items.find((p) => isCollection(p) && p.title === DEFAULT_COLLECTION);
   const id = existing ? existing.id : doc(pagesCol(uid)).id;
   const start = existing ? nextOrderAt(tree, id) : 1;
-  commitInChunks([
+  const done = commitInChunks([
     ...(existing
       ? []
       : [
@@ -107,7 +107,7 @@ export function adoptRootPages(uid, pages) {
         ]),
     ...roots.map((p, i) => (batch) => batch.update(pageRef(uid, p.id), { parentId: id, order: start + i, updatedAt: serverTimestamp() })),
   ]);
-  return id;
+  return { id, done };
 }
 
 // Sửa metadata (vd. title) của một trang

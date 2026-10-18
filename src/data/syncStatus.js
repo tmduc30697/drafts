@@ -54,6 +54,9 @@ export function track(promise) {
     },
     (err) => {
       done();
+      // 'not-found': lần ghi nhắm vào trang/tài liệu đã bị xóa ở máy khác (vd. xóa ở app khác trong lúc máy này còn lần ghi chờ
+      // trong cache). Không có gì để đồng bộ nữa nên không coi là lỗi, tránh icon cảnh báo nháy mãi.
+      if (err?.code === 'not-found') return;
       reportSyncError(err);
     },
   );

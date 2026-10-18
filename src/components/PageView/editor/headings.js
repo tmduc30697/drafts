@@ -1,6 +1,6 @@
 import { RangeSetBuilder } from '@codemirror/state';
-import { Decoration, EditorView, ViewPlugin, keymap } from '@codemirror/view';
-import { syntaxTree } from '@codemirror/language';
+import { Decoration, EditorView, GutterMarker, ViewPlugin, gutterLineClass, keymap } from '@codemirror/view';
+import { codeFolding, foldEffect, foldKeymap, foldService, foldedRanges, syntaxTree, unfoldEffect } from '@codemirror/language';
 import { applyKind, KINDS } from './lineKinds.js';
 
 // Tiêu đề markdown "# ", "## ", "### ": chữ to và đậm theo cấp, ký hiệu # được ẩn (con trỏ nhảy qua như một ký tự).
@@ -17,6 +17,56 @@ function inCode(state, pos) {
   return false;
 }
 
+// Thu gọn / mở rộng theo tiêu đề: nội dung dưới một tiêu đề, cho đến tiêu đề kế tiếp cùng cấp hoặc cấp cao hơn (hoặc hết trang),
+// được gập lại thành dấu "…". Bấm vào số hàng của tiêu đề để gập / mở.
+function headingLevel(state, line) {
+  const m = HEADING.exec(line.text);
+  return m && !inCode(state, line.from) ? m[1].length : 0;
+}
+
+const headingFoldRange = (state, line) => {
+  const level = headingLevel(state, line);
+  if (!level) return null;
+  let end = line.to; // cuối dòng có chữ cuối cùng thuộc phần này (bỏ các dòng trống ở cuối)
+  for (let n = line.number + 1; n <= state.doc.lines; n++) {
+    const next = state.doc.line(n);
+    const l = headingLevel(state, next);
+    if (l && l <= level) break;
+    if (next.text.trim()) end = next.to;
+  }
+  return end > line.to ? { from: line.to, to: end } : null;
+};
+
+const headingFold = foldService.of((state, lineStart) => headingFoldRange(state, state.doc.lineAt(lineStart)));
+
+// Bấm vào số hàng của một tiêu đề để gập / mở phần của nó. Trả về true nếu dòng đó là tiêu đề có nội dung bên dưới.
+export function toggleHeadingFoldAt(view, pos) {
+  const line = view.state.doc.lineAt(pos);
+  const range = headingFoldRange(view.state, line);
+  if (!range) return false;
+  let hit = null;
+  foldedRanges(view.state).between(range.from, range.from, (from, to) => {
+    if (from === range.from) hit = { from, to };
+  });
+  if (hit) view.dispatch({ effects: unfoldEffect.of(hit) });
+  else view.dispatch({ effects: foldEffect.of(range), selection: { anchor: line.to } });
+  return true;
+}
+
+// Số hàng của tiêu đề có thể bấm: đánh dấu bằng class để đổi con trỏ chuột
+class FoldableMarker extends GutterMarker {
+  elementClass = 'cm-foldable-ln';
+}
+const foldableMarker = new FoldableMarker();
+const foldableNumbers = gutterLineClass.compute(['doc'], (state) => {
+  const b = new RangeSetBuilder();
+  for (let n = 1; n <= state.doc.lines; n++) {
+    const line = state.doc.line(n);
+    if (headingFoldRange(state, line)) b.add(line.from, line.from, foldableMarker);
+  }
+  return b.finish();
+});
+
 function build(view) {
   const { state } = view;
   const decos = new RangeSetBuilder();
@@ -31,6 +81,7 @@ function build(view) {
       const m = HEADING.exec(line.text);
       if (!m || inCode(state, line.from)) continue;
       decos.add(line.from, line.from, lineDeco[m[1].length - 1]);
+      // Mũi tên thu gọn chỉ cho tiêu đề có nội dung bên dưới
       decos.add(line.from, line.from + m[0].length, hide);
       hidden.add(line.from, line.from + m[0].length, hide);
     }
@@ -45,12 +96,15 @@ const plugin = ViewPlugin.fromClass(
     }
 
     update(u) {
-      if (u.docChanged || u.viewportChanged || syntaxTree(u.startState) !== syntaxTree(u.state)) Object.assign(this, build(u.view));
+      const foldChanged = u.transactions.some((tr) => tr.effects.some((e) => e.is(foldEffect) || e.is(unfoldEffect)));
+      if (u.docChanged || u.viewportChanged || foldChanged || syntaxTree(u.startState) !== syntaxTree(u.state)) Object.assign(this, build(u.view));
     }
   },
   {
     decorations: (v) => v.decorations,
-    provide: (p) => EditorView.atomicRanges.of((view) => view.plugin(p)?.hidden ?? Decoration.none),
+    provide: (p) => [
+      EditorView.atomicRanges.of((view) => view.plugin(p)?.hidden ?? Decoration.none),
+    ],
   },
 );
 
@@ -78,8 +132,25 @@ function backspaceInHeading(view) {
 
 const kind = (id) => KINDS.find((k) => k.id === id);
 
+// Chỗ gập hiển thị là dấu "…" (bấm để mở rộng lại)
+const foldPlaceholder = codeFolding({
+  placeholderDOM(view, onclick) {
+    const el = document.createElement('span');
+    el.className = 'cm-fold-placeholder';
+    el.textContent = '…';
+    el.title = 'Mở rộng';
+    el.addEventListener('mousedown', (e) => e.preventDefault());
+    el.addEventListener('click', onclick);
+    return el;
+  },
+});
+
 export const headings = [
   plugin,
+  headingFold,
+  foldableNumbers,
+  foldPlaceholder,
+  keymap.of(foldKeymap),
   keymap.of([
     { key: 'Backspace', run: backspaceInHeading },
     // Như Google Docs / Notion: ⌘⌥1 / 2 / 3 (bấm lại để bỏ)
