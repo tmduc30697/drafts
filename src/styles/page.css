@@ -692,6 +692,7 @@
 
 .page:has(.text-editor) {
   padding-bottom: 0;
+  max-width: none; /* chữ xuống dòng theo bề rộng thật của vùng soạn thảo, không giới hạn ~720px */
 }
 
 .content:has(.text-editor) {
@@ -767,7 +768,7 @@
 @media (min-width: 768px) {
   .text-editor {
     /* không vượt quá mép phải nên không sinh thanh cuộn ngang */
-    --edit-extra: max(0px, calc(100cqw - 41px - var(--content-max) - var(--page-pad)));
+    --edit-extra: var(--page-pad); /* cột chữ đã rộng hết vùng: chỉ còn khoảng đệm bên phải */
   }
 
   .text-editor .cm-activeLine:not(.cm-codeblock)::after,
@@ -902,6 +903,7 @@
 
 .doc-toolbar-spacer {
   flex: 1;
+  align-self: stretch; /* cao hết thanh để bấm vào chỗ trống được */
 }
 
 /* Trang bị khóa: các nút định dạng mờ và không bấm được, chỉ còn nút khóa */
@@ -942,18 +944,12 @@
   left: 100%;
   top: 0;
   bottom: 0;
-  width: 0;
+  width: var(--page-pad);
   background-image: linear-gradient(var(--text-faint), var(--text-faint));
   background-size: 100% 1px;
   background-position: 0 50%;
   background-repeat: no-repeat;
   pointer-events: none;
-}
-
-@media (min-width: 768px) {
-  .text-editor .cm-hr-line.cm-line::after {
-    width: max(0px, calc(100cqw - 41px - var(--content-max) - var(--page-pad)));
-  }
 }
 
 /* Cột tài liệu tham khảo (markdown đã render) */
@@ -1027,6 +1023,8 @@
 /* Cột tài liệu dùng cùng trình soạn thảo ở chế độ chỉ đọc: lề số hàng giống phần ghi chú (không có .page bao ngoài) */
 .ref-editor {
   padding: 0;
+  --page-pad: 0px;
+  --edit-extra: 0px;
 }
 
 .ref-editor .cm-editor {
@@ -1044,18 +1042,29 @@
   font-size: var(--fs);
 }
 
-/* Chỉ đọc: không tô dòng đang chọn */
-.ref-editor .cm-activeLine,
-.ref-editor .cm-activeLineGutter {
+/* Chế độ chỉ đọc: không tô dòng đang chọn (khi bấm bút để sửa thì có highlight như bên ghi chú) */
+.ref-editor .cm-editor.cm-locked .cm-activeLine,
+.ref-editor .cm-editor.cm-locked .cm-activeLineGutter {
   background: none !important;
 }
 
-.ref-editor .cm-activeLine::after {
+.ref-editor .cm-editor.cm-locked .cm-activeLine::after {
   display: none;
 }
 
-.ref-editor .cm-activeLineGutter {
+.ref-editor .cm-editor.cm-locked .cm-activeLineGutter {
   color: var(--text-faint);
+}
+
+/* Thanh công cụ của cột tài liệu (hiện khi bấm bút): gọn hơn và không dính trên cùng */
+.doc-toolbar.compact {
+  position: static;
+  flex-shrink: 0;
+}
+
+.ref-head .icon-btn.active {
+  background: var(--bg-active);
+  color: var(--text);
 }
 
 .cm-md-heading {
@@ -1087,4 +1096,31 @@
 .doc-btn-heading {
   font-size: 12px;
   font-weight: 700;
+}
+
+/* Thanh tiêu đề cột tài liệu: bấm vào để thu gọn */
+.ref-head-fold {
+  cursor: pointer;
+  user-select: none;
+}
+
+.ref-head-fold:hover {
+  background-image: linear-gradient(var(--bg-hover), var(--bg-hover));
+}
+
+.ref-head-fold .icon-btn {
+  cursor: pointer;
+}
+
+/* Thanh có thể bấm vào chỗ trống để thu gọn cột */
+.doc-toolbar.foldable {
+  cursor: pointer;
+}
+
+.doc-toolbar.foldable .doc-btn {
+  cursor: pointer;
+}
+
+.doc-toolbar.foldable:hover {
+  background-image: linear-gradient(var(--bg-hover), var(--bg-hover));
 }

@@ -1,7 +1,8 @@
-import { useCallback, useState } from 'react';
+import { useCallback, useRef, useState } from 'react';
 import { updatePage } from '../../data/pages.js';
-import { byteLength, MAX_REF_BYTES, refDisplayName, removeReference, saveReference } from '../../data/references.js';
+import { byteLength, MAX_REF_BYTES, refDisplayName, saveReference } from '../../data/references.js';
 import { useReference } from '../../hooks/useReference.js';
+import { useDebouncedSaver } from '../../hooks/useDebouncedSaver.js';
 import { loadJSON, saveJSON } from '../../lib/storage.js';
 import Editor from './Editor.jsx';
 import ImportDialog from './ImportDialog.jsx';
@@ -44,8 +45,20 @@ export default function PageView({ uid, page }) {
     saveReference(uid, page.id, { name, text });
   };
 
-  const removeRef = () => {
-    if (window.confirm(`Gỡ tài liệu "${refDisplayName(ref.name)}" khỏi trang này? Ghi chú của bạn không bị ảnh hưởng.`)) removeReference(uid, page.id);
+  // Sửa trực tiếp tài liệu ở cột trái: tự lưu sau 1.5 giây ngừng gõ (và khi rời trang / ẩn app)
+  const refText = useRef(null);
+  const refSaver = useDebouncedSaver(() => {
+    const text = refText.current;
+    if (text == null || !ref) return;
+    if (byteLength(text) > MAX_REF_BYTES) {
+      window.alert('Tài liệu quá lớn (vượt 1 MB) nên chưa lưu được thay đổi mới nhất.');
+      return;
+    }
+    saveReference(uid, page.id, { name: ref.name, text });
+  });
+  const onRefChange = (text) => {
+    refText.current = text;
+    refSaver.schedule();
   };
 
   // Kéo thanh chia để đổi độ rộng hai cột
@@ -80,10 +93,10 @@ export default function PageView({ uid, page }) {
               text={ref.text}
               locked={locked}
               onReplace={() => setImporting(true)}
-              onRemove={removeRef}
               onQuote={(text) => view && insertQuote(view, text)}
+              onChange={onRefChange}
+              isSaving={refSaver.isDirty}
               onFoldDoc={() => setFold('doc')}
-              onFoldNotes={() => setFold('notes')}
             />
           </div>
           {fold === 'doc' && <FoldStrip label="Tài liệu" icon={<DocIcon size={16} />} onOpen={() => setFold(null)} />}
@@ -99,6 +112,7 @@ export default function PageView({ uid, page }) {
           title={page.title || page.preview}
           locked={locked}
           hasRef={!!ref}
+          onFold={ref ? () => setFold('notes') : undefined}
           onImport={() => setImporting(true)}
           onToggleLock={() => updatePage(uid, page.id, { locked: !locked })}
         />

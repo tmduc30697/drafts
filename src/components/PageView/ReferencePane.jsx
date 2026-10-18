@@ -1,9 +1,10 @@
 import { useEffect, useRef, useState } from 'react';
-import { EditorState } from '@codemirror/state';
+import { EditorState, Transaction } from '@codemirror/state';
 import { Decoration, EditorView, ViewPlugin } from '@codemirror/view';
-import { ChevronsLeftIcon, ChevronsRightIcon, CloseIcon, DocIcon, DownloadIcon, QuoteIcon } from '../icons.jsx';
+import { DocIcon, DownloadIcon, EditIcon, QuoteIcon } from '../icons.jsx';
 import { downloadText } from '../../lib/download.js';
-import { editorExtensions } from './editor/setup.js';
+import { editorExtensions, setLocked } from './editor/setup.js';
+import Toolbar from './Toolbar.jsx';
 
 // Dòng tiêu đề markdown ("# ...") đậm lên; giữ nguyên chiều cao dòng để số hàng đều như bên ghi chú
 const headingLine = Decoration.line({ class: 'cm-md-heading' });
@@ -31,11 +32,15 @@ const headings = ViewPlugin.fromClass(
   { decorations: (v) => v.decorations },
 );
 
-// Cột trái: tài liệu markdown được import, chỉ để đọc. Dùng cùng trình soạn thảo với phần ghi chú (chế độ chỉ đọc)
-// nên lề số hàng, định dạng và chiều cao dòng giống hệt bên phải.
-export default function ReferencePane({ name, text, locked, onReplace, onRemove, onQuote, onFoldDoc, onFoldNotes }) {
+// Cột trái: tài liệu markdown được import. Mặc định chỉ đọc; bấm bút ở đầu cột để bật chế độ sửa (có thanh định dạng).
+// Dùng cùng trình soạn thảo với phần ghi chú nên lề số hàng, định dạng và chiều cao dòng giống hệt bên phải.
+export default function ReferencePane({ name, text, locked, onReplace, onQuote, onFoldDoc, onChange, isSaving }) {
   const host = useRef(null);
   const viewRef = useRef(null);
+  const [view, setView] = useState(null);
+  const [editing, setEditing] = useState(false);
+  const onChangeRef = useRef(onChange);
+  onChangeRef.current = onChange;
   const pane = useRef(null);
   // Đoạn đang bôi chọn trong tài liệu + vị trí nút "Trích dẫn" nổi bên dưới nó
   const [pick, setPick] = useState(null);
@@ -46,10 +51,20 @@ export default function ReferencePane({ name, text, locked, onReplace, onRemove,
       parent: host.current,
       state: EditorState.create({
         doc: text,
-        extensions: [editorExtensions({ onDocChange() {}, locked: true }), headings],
+        extensions: [
+          editorExtensions({
+            locked: true,
+            onDocChange: (u) => {
+              // Bỏ qua thay đổi do áp bản từ nơi khác
+              if (!u.transactions.some((tr) => tr.annotation(Transaction.remote))) onChangeRef.current?.(u.state.doc.toString());
+            },
+          }),
+          headings,
+        ],
       }),
     });
     viewRef.current = view;
+    setView(view);
     return () => {
       view.destroy();
       viewRef.current = null;
@@ -58,12 +73,21 @@ export default function ReferencePane({ name, text, locked, onReplace, onRemove,
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  // Không ghi đè khi đang có thay đổi chưa lưu (tránh bản cũ vọng lại làm mất chữ đang gõ)
   useEffect(() => {
-    const view = viewRef.current;
-    if (view && view.state.doc.toString() !== text) {
-      view.dispatch({ changes: { from: 0, to: view.state.doc.length, insert: text } });
-    }
-  }, [text]);
+    const v = viewRef.current;
+    if (!v || isSaving?.() || v.state.doc.toString() === text) return;
+    v.dispatch({
+      changes: { from: 0, to: v.state.doc.length, insert: text },
+      annotations: [Transaction.remote.of(true), Transaction.addToHistory.of(false)],
+    });
+  }, [text, isSaving]);
+
+  // Chỉ sửa được khi bật chế độ sửa và trang không bị khóa
+  const canEdit = editing && !locked;
+  useEffect(() => {
+    if (viewRef.current) setLocked(viewRef.current, !canEdit);
+  }, [canEdit]);
 
   // Theo dõi vùng bôi chọn để hiện nút trích dẫn; chỉ khi bôi trong nội dung tài liệu
   useEffect(() => {
@@ -113,13 +137,36 @@ export default function ReferencePane({ name, text, locked, onReplace, onRemove,
 
   return (
     <section ref={pane} className="ref-pane" aria-label="Tài liệu tham khảo">
-      <header className="ref-head">
-        <button className="icon-btn small" title="Thu gọn tài liệu" aria-label="Thu gọn tài liệu" onClick={onFoldDoc}>
-          <ChevronsLeftIcon size={15} />
-        </button>
+      {/* Bấm vào thanh tiêu đề (chỗ không phải nút) để thu gọn nhanh cột tài liệu */}
+      <header
+        className="ref-head ref-head-fold"
+        role="button"
+        tabIndex={0}
+        title="Bấm vào thanh này để thu gọn tài liệu"
+        aria-label="Thu gọn tài liệu"
+        onClick={(e) => {
+          if (!e.target.closest('button')) onFoldDoc();
+        }}
+        onKeyDown={(e) => {
+          if ((e.key === 'Enter' || e.key === ' ') && e.target === e.currentTarget) {
+            e.preventDefault();
+            onFoldDoc();
+          }
+        }}
+      >
         <span className="ref-name" title={name}>
           {name}
         </span>
+        <button
+          className={`icon-btn small ${canEdit ? 'active' : ''}`}
+          title={locked ? 'Trang đã khóa' : canEdit ? 'Tắt chế độ sửa' : 'Sửa tài liệu'}
+          aria-label="Sửa tài liệu"
+          aria-pressed={canEdit}
+          disabled={locked}
+          onClick={() => setEditing((e) => !e)}
+        >
+          <EditIcon size={15} />
+        </button>
         <button
           className="icon-btn small"
           title="Tải tài liệu về máy"
@@ -132,13 +179,8 @@ export default function ReferencePane({ name, text, locked, onReplace, onRemove,
         <button className="icon-btn small" title="Thay bằng tài liệu khác" aria-label="Thay tài liệu" disabled={locked} onClick={onReplace}>
           <DocIcon size={15} />
         </button>
-        <button className="icon-btn small" title="Gỡ tài liệu" aria-label="Gỡ tài liệu" disabled={locked} onClick={onRemove}>
-          <CloseIcon size={15} />
-        </button>
-        <button className="icon-btn small ref-fold-notes" title="Thu gọn ghi chú (tài liệu chiếm hết chỗ)" aria-label="Thu gọn ghi chú" onClick={onFoldNotes}>
-          <ChevronsRightIcon size={15} />
-        </button>
       </header>
+      {canEdit && <Toolbar view={view} compact />}
       <div className="ref-scroll">
         <div ref={host} className="text-editor ref-editor" />
       </div>

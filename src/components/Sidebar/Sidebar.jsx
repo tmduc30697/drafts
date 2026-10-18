@@ -74,7 +74,18 @@ export default function Sidebar({ user, tree, ctx, collapsed, onToggle }) {
 
   return (
     <nav className="sidebar-inner">
-      <div className="sidebar-head">
+      {/* Bấm vào chỗ trống của thanh trên cùng sidebar để thu gọn nhanh */}
+      <div
+        className="sidebar-head foldable"
+        title="Bấm vào thanh này để thu gọn sidebar"
+        onClick={(e) => {
+          if (!e.target.closest('button')) onToggle();
+        }}
+      >
+        <button className="sidebar-user" onClick={toggleUserMenu}>
+          <Avatar user={user} />
+          <span className="sidebar-user-name">{user.displayName || user.email}</span>
+        </button>
         <span className="desktop-only">
           <SyncIndicator />
         </span>
@@ -92,10 +103,6 @@ export default function Sidebar({ user, tree, ctx, collapsed, onToggle }) {
         </button>
       </div>
 
-      <button className="sidebar-user" onClick={toggleUserMenu}>
-        <Avatar user={user} />
-        <span className="sidebar-user-name">{user.displayName || user.email}</span>
-      </button>
       {menu}
     </nav>
   );

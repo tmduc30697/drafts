@@ -20,7 +20,8 @@ const kind = (id) => KINDS.find((k) => k.id === id);
 const fileName = (title) => `${(title || 'Không có tiêu đề').replace(/[\\/:*?"<>|\n\r]+/g, ' ').trim().slice(0, 100) || 'Drafts'}.md`;
 
 
-export default function Toolbar({ view, title, locked, hasRef, onImport, onToggleLock }) {
+// compact: dùng cho cột tài liệu (không có nút nhập / tải / khóa và không tính khoảng trống cuối trang)
+export default function Toolbar({ view, title, locked, hasRef, onImport, onToggleLock, onFold, compact = false }) {
   const [active, setActive] = useState(null);
 
   // Theo dõi con trỏ để tô sáng kiểu dòng hiện tại
@@ -40,7 +41,7 @@ export default function Toolbar({ view, title, locked, hasRef, onImport, onToggl
   // Không suy ra bằng công thức: đo vị trí thật của dòng cuối và mức cuộn tối đa, rồi chỉnh khoảng trống
   // cho đến khi khi cuộn hết cỡ thì đỉnh dòng cuối đúng bằng đáy thanh công cụ.
   useEffect(() => {
-    if (!view) return undefined;
+    if (!view || compact) return undefined;
     const content = view.dom.closest('.content');
     const toolbar = content?.querySelector('.doc-toolbar');
     if (!content || !toolbar) return undefined;
@@ -71,7 +72,7 @@ export default function Toolbar({ view, title, locked, hasRef, onImport, onToggl
       cancelAnimationFrame(raf);
       ro.disconnect();
     };
-  }, [view]);
+  }, [view, compact]);
 
   if (!view) return <div className="doc-toolbar" />;
 
@@ -93,7 +94,14 @@ export default function Toolbar({ view, title, locked, hasRef, onImport, onToggl
   const line = (id) => () => applyKind(view, kind(id));
 
   return (
-    <div className={`doc-toolbar ${locked ? 'locked' : ''}`} role="toolbar" aria-label="Định dạng">
+    <div
+      className={`doc-toolbar ${locked ? 'locked' : ''} ${compact ? 'compact' : ''} ${onFold ? 'foldable' : ''}`}
+      role="toolbar"
+      aria-label="Định dạng"
+      title={onFold ? 'Bấm vào chỗ trống của thanh này để thu gọn ghi chú' : undefined}
+      // Bấm vào chỗ không phải nút thì thu gọn cột ghi chú (chỉ khi có tài liệu bên cạnh)
+      onClick={onFold ? (e) => !e.target.closest('button') && onFold() : undefined}
+    >
       {[1, 2, 3].map((n) => (
         <Btn key={n} label={`Tiêu đề ${n} (${MOD}${ALT}${n})`} active={active === `h${n}`} onClick={line(`h${n}`)}>
           <span className="doc-btn-heading">H{n}</span>
@@ -139,18 +147,22 @@ export default function Toolbar({ view, title, locked, hasRef, onImport, onToggl
       <Btn label="Sơ đồ Mermaid" onClick={addMermaid}>
         <MermaidIcon size={17} />
       </Btn>
-      <span className="doc-toolbar-spacer" />
-      {!hasRef && (
+      {!compact && <span className="doc-toolbar-spacer" />}
+      {!compact && !hasRef && (
         <Btn label="Nhập tài liệu markdown để đọc bên cạnh" onClick={onImport}>
           <DocIcon size={17} />
         </Btn>
       )}
-      <Btn label="Tải trang về (.md)" keep onClick={() => downloadText(view.state.doc.toString(), fileName(title))}>
-        <DownloadIcon size={17} />
-      </Btn>
-      <Btn label={lockLabel} active={locked} locked onClick={onToggleLock}>
-        {locked ? <LockIcon size={17} /> : <UnlockIcon size={17} />}
-      </Btn>
+      {!compact && (
+        <>
+          <Btn label="Tải trang về (.md)" keep onClick={() => downloadText(view.state.doc.toString(), fileName(title))}>
+            <DownloadIcon size={17} />
+          </Btn>
+          <Btn label={lockLabel} active={locked} locked onClick={onToggleLock}>
+            {locked ? <LockIcon size={17} /> : <UnlockIcon size={17} />}
+          </Btn>
+        </>
+      )}
     </div>
   );
 }

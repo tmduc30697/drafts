@@ -56,10 +56,6 @@
   flex: 1;
 }
 
-.ref-col.full .ref-fold-notes {
-  display: none;
-}
-
 /* Dải hẹp thay cho cột đang thu gọn */
 .fold-strip {
   flex: 0 0 32px;
@@ -301,9 +297,11 @@ body.dragging-split {
 .sidebar-user {
   display: flex;
   align-items: center;
+  flex: 0 1 auto; /* vừa tên: phần trống còn lại của thanh dùng để bấm thu gọn sidebar */
+  min-width: 0;
   gap: 8px;
-  padding: 6px 14px;
-  margin-top: 12px;
+  padding: 4px 6px;
+  border-radius: 6px;
   text-align: left;
   font-weight: 600;
   font-size: var(--fs);
@@ -357,7 +355,6 @@ body.dragging-split {
 .sidebar-head {
   display: flex;
   align-items: center;
-  justify-content: flex-end;
   gap: 4px;
   /* cao bằng .doc-toolbar để hai đường kẻ thẳng hàng; margin âm bù padding của .sidebar-inner */
   height: 40px;
@@ -368,6 +365,11 @@ body.dragging-split {
 
 .desktop-only {
   display: inline-flex;
+}
+
+/* đẩy chỉ báo đồng bộ và nút thu gọn sang mép phải thanh, chừa khoảng trống ở giữa */
+.sidebar-head > .desktop-only {
+  margin-left: auto;
 }
 
 .sidebar-tree {
@@ -716,4 +718,13 @@ body.dragging-split {
   align-items: center;
   padding: 0 6px;
   color: var(--text-faint);
+}
+
+/* Thanh trên cùng sidebar: bấm vào chỗ trống để thu gọn */
+.sidebar-head.foldable {
+  cursor: pointer;
+}
+
+.sidebar-head.foldable:hover {
+  background-image: linear-gradient(var(--bg-hover), var(--bg-hover));
 }
