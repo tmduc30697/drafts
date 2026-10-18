@@ -17,7 +17,7 @@ const clampWidth = (n) => Math.min(80, Math.max(20, n));
 
 // Một trang. Không có tài liệu import: chỉ phần soạn thảo. Có tài liệu import: tài liệu ở cột trái (đọc),
 // phần soạn thảo ghi chú ở cột phải. Tên trang sửa ở sidebar (nhấp đúp).
-export default function PageView({ uid, page }) {
+export default function PageView({ uid, page, displayTitle }) {
   const [view, setView] = useState(null);
   const onEditorReady = useCallback((v) => setView(v), []);
   const locked = !!page.locked;
@@ -109,7 +109,7 @@ export default function PageView({ uid, page }) {
       <div className={`content ${ref && fold === 'notes' ? 'folded' : ''}`}>
         <Toolbar
           view={view}
-          title={page.title || page.preview}
+          title={displayTitle}
           locked={locked}
           hasRef={!!ref}
           onFold={ref ? () => setFold('notes') : undefined}

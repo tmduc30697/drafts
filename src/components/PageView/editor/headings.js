@@ -54,14 +54,25 @@ const plugin = ViewPlugin.fromClass(
   },
 );
 
-// Backspace ngay sau ký hiệu # (đầu chữ của tiêu đề): bỏ kiểu tiêu đề, giữ chữ
-function removeHeadingBackward(view) {
-  const sel = view.state.selection.main;
+// Backspace ngay sau ký hiệu # (đầu chữ của tiêu đề) hoạt động như ở đầu một dòng bình thường, không âm thầm làm mất kiểu tiêu đề:
+// - dòng phía trên trống: xóa dòng trống đó, tiêu đề được kéo lên và vẫn là tiêu đề;
+// - dòng phía trên có chữ: nối chữ của tiêu đề vào cuối dòng đó (bỏ ký hiệu # vì không còn ở đầu dòng);
+// - tiêu đề ở dòng đầu tiên của trang: bỏ kiểu tiêu đề, giữ chữ.
+function backspaceInHeading(view) {
+  const { state } = view;
+  const sel = state.selection.main;
   if (!sel.empty) return false;
-  const line = view.state.doc.lineAt(sel.head);
+  const line = state.doc.lineAt(sel.head);
   const m = HEADING.exec(line.text);
-  if (!m || sel.head !== line.from + m[0].length || inCode(view.state, line.from)) return false;
-  view.dispatch({ changes: { from: line.from, to: sel.head }, userEvent: 'delete' });
+  if (!m || sel.head !== line.from + m[0].length || inCode(state, line.from)) return false;
+  let change;
+  if (line.number === 1) {
+    change = { from: line.from, to: line.from + m[0].length };
+  } else {
+    const prev = state.doc.line(line.number - 1);
+    change = prev.text.trim() ? { from: prev.to, to: line.from + m[0].length } : { from: prev.from, to: line.from };
+  }
+  view.dispatch({ changes: change, userEvent: 'delete' });
   return true;
 }
 
@@ -70,7 +81,7 @@ const kind = (id) => KINDS.find((k) => k.id === id);
 export const headings = [
   plugin,
   keymap.of([
-    { key: 'Backspace', run: removeHeadingBackward },
+    { key: 'Backspace', run: backspaceInHeading },
     // Như Google Docs / Notion: ⌘⌥1 / 2 / 3 (bấm lại để bỏ)
     { key: 'Mod-Alt-1', run: (view) => (applyKind(view, kind('h1')), true) },
     { key: 'Mod-Alt-2', run: (view) => (applyKind(view, kind('h2')), true) },

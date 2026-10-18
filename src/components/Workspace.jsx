@@ -148,11 +148,16 @@ export default function Workspace({ user }) {
     });
   }, [loaded, uid, pages]);
 
+  // Trang chưa đặt tên được gọi là "Page 1", "Page 2", ... theo thứ tự tạo (chỉ đếm các trang chưa có tên)
+  const pageLabels = useMemo(() => {
+    const untitled = list.filter((p) => !isCollection(p) && !p.title).sort((a, b) => a.createdAt - b.createdAt);
+    return new Map(untitled.map((p, i) => [p.id, `Page ${i + 1}`]));
+  }, [list]);
+
   const ctx = useMemo(
     () => ({
       currentId,
-      // Chưa đặt tên thì dùng vài từ đầu của nội dung
-      titleOf: (p) => p.title || p.preview,
+      titleOf: (p) => p.title || pageLabels.get(p.id) || '',
       onRename: (page, title) => {
         if (page.locked) return;
         if (title !== page.title) updatePage(uid, page.id, { title });
@@ -191,7 +196,7 @@ export default function Workspace({ user }) {
       onDelete: (page) => {
         if (page.locked) return;
         // Xóa hẳn (không có thùng rác) nên hỏi lại trước
-        const title = page.title || page.preview;
+        const title = page.title || pageLabels.get(page.id);
         if (!window.confirm(`Xóa "${title || UNTITLED}"? Trang sẽ bị xóa vĩnh viễn.`)) return;
         const id = page.id;
         // Đang mở trang bị xóa thì chuyển sang trang kế bên (dưới, không có thì trên).
@@ -206,7 +211,7 @@ export default function Workspace({ user }) {
       },
       onNavigate: () => setDrawerOpen(false),
     }),
-    [currentId, uid, pages, list, tree, lastKey, expanded, setExpandedSaved, renameId],
+    [currentId, uid, pages, list, tree, lastKey, expanded, setExpandedSaved, renameId, pageLabels],
   );
 
   return (
@@ -235,7 +240,7 @@ export default function Workspace({ user }) {
             <div className="content" />
           ) : currentPage ? (
             <Suspense fallback={<div className="content" />}>
-              <PageView key={currentPage.id} uid={uid} page={currentPage} />
+              <PageView key={currentPage.id} uid={uid} page={currentPage} displayTitle={currentPage.title || pageLabels.get(currentPage.id)} />
             </Suspense>
           ) : route.view === 'page' ? (
             <div className="content">

@@ -123,7 +123,7 @@ function PageRow({ page, ctx, nested = false }) {
           <span className="tree-icon">
             <DocIcon size={16} />
           </span>
-          <TitleInput initial={page.title} placeholder={UNTITLED} onDone={finish} onCancel={() => setEditing(false)} />
+          <TitleInput initial={page.title} placeholder={title || UNTITLED} onDone={finish} onCancel={() => setEditing(false)} />
         </div>
       ) : (
         <a
@@ -140,7 +140,7 @@ function PageRow({ page, ctx, nested = false }) {
           <span className="tree-icon">
             <DocIcon size={16} />
           </span>
-          <span className={`tree-title ${title ? '' : 'untitled'}`}>{title || UNTITLED}</span>
+          <span className={`tree-title ${page.title ? '' : 'untitled'}`}>{title || UNTITLED}</span>
         </a>
       )}
       {page.locked ? (
