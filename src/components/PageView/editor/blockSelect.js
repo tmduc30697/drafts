@@ -30,4 +30,7 @@ export function selectBlock(view, pos) {
   view.dispatch({ selection: { anchor: pos }, effects: selectBlockEffect.of(null) });
 }
 
+// Hiệu ứng để giữ trạng thái "chọn cả khối" qua một lần sửa (vd. thụt lề cả khối): không chọn khối thì không có gì
+export const blockSelectEffects = (state) => (state.field(blockSelected, false) ? [selectBlockEffect.of(null)] : []);
+
 export const blockSelect = [blockSelected, guardTyping];

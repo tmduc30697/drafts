@@ -42,20 +42,25 @@ const FENCE_OPEN = /^(\s*)(`{3,}|~{3,})\s*([^\s`]*)/;
 const FENCE_CLOSE = /^\s*(`{3,}|~{3,})\s*$/;
 const MIN_WIDTH = 160;
 
-// Dòng mở khối: ```js width=480 → { prefix: '```', lang: 'js', width: 480 } (width = null: rộng hết cột).
-// Độ rộng ghi sau tên ngôn ngữ: các công cụ markdown khác chỉ đọc từ đầu tiên nên không bị ảnh hưởng.
-function parseFence(text) {
+// Dòng mở khối: ```js width=480 indent=1 → { prefix: '```', lang: 'js', width: 480, indent: 1 }
+// (width = null: rộng hết cột; indent: số nấc thụt lề, mỗi nấc bằng 2 ký tự như thụt lề dòng chữ).
+// Độ rộng / thụt lề ghi sau tên ngôn ngữ: các công cụ markdown khác chỉ đọc từ đầu tiên nên không bị ảnh hưởng.
+export function parseFence(text) {
   const m = /^(\s*(?:`{3,}|~{3,}))\s*(.*)$/.exec(text);
   if (!m) return null;
   const words = m[2].trim().split(/\s+/).filter(Boolean);
   const lang = words[0] && !words[0].includes('=') ? words[0] : '';
   const w = /(?:^|\s)width=(\d+)/.exec(m[2]);
-  return { prefix: m[1], lang, width: w ? Number(w[1]) : null };
+  const i = /(?:^|\s)indent=(\d+)/.exec(m[2]);
+  return { prefix: m[1], lang, width: w ? Number(w[1]) : null, indent: i ? Number(i[1]) : 0 };
 }
 
-function fenceText({ prefix, lang, width }) {
-  return prefix + lang + (width ? ` width=${width}` : '');
+export function fenceText({ prefix, lang, width, indent }) {
+  return prefix + lang + (width ? ` width=${width}` : '') + (indent ? ` indent=${indent}` : '');
 }
+
+// Dòng mở của khối Mermaid (```mermaid, có thể kèm indent=...)
+export const isMermaidFence = (text) => parseFence(text)?.lang.toLowerCase() === 'mermaid';
 
 // Ghi lại dòng mở của khối chứa pos với các thay đổi (lang / width)
 function updateFence(view, pos, patch) {
@@ -126,7 +131,8 @@ function resizeHandle(view, wrap) {
     handle.setPointerCapture(e.pointerId);
     handle.classList.add('dragging');
     const els = blockLineElements(begin);
-    const left = begin.getBoundingClientRect().left + begin.clientLeft;
+    // Mép trái khung (đã dịch sang phải theo thụt lề)
+    const left = begin.getBoundingClientRect().left + begin.clientLeft + (parseFloat(getComputedStyle(begin, '::before').left) || 0);
     // Rộng nhất: tới cách mép phải vùng soạn thảo 16px (màn hình hẹp: hết cột chữ)
     const column = view.contentDOM.getBoundingClientRect().right - left;
     const area = view.dom.closest('.content');
@@ -252,10 +258,10 @@ function buildDecorations(view) {
         const lastLine = doc.lineAt(node.to);
         const open = FENCE_OPEN.exec(first.text);
         const fence = parseFence(first.text);
-        const style = fence?.width ? `--code-w: ${fence.width}px` : null;
+        const style = [fence?.width && `--code-w: ${fence.width}px`, fence?.indent && `--indent: ${fence.indent}`].filter(Boolean).join('; ');
         const closed = lastLine.number > first.number && FENCE_CLOSE.test(lastLine.text);
         // Khối mermaid đã đóng được vẽ thành sơ đồ (mermaidBlocks.js), không trang trí ở đây
-        if (closed && open && open[3].toLowerCase() === 'mermaid') return false;
+        if (closed && open && isMermaidFence(first.text)) return false;
 
         // Nền + font cho mọi dòng của khối
         for (let n = first.number; n <= lastLine.number; n++) {
@@ -341,7 +347,8 @@ const clickBesideBox = EditorView.domEventHandlers({
     if (e.button !== 0) return false;
     const line = e.target.closest?.('.cm-codeblock');
     if (!line) return false;
-    const box = line.getBoundingClientRect().left + line.clientLeft + parseFloat(getComputedStyle(line, '::before').width);
+    const before = getComputedStyle(line, '::before');
+    const box = line.getBoundingClientRect().left + line.clientLeft + (parseFloat(before.left) || 0) + parseFloat(before.width);
     if (e.clientX <= box) return false;
     const node = fencedCodeAt(view.state, view.posAtDOM(line));
     if (!node) return false;

@@ -40,7 +40,14 @@ export function useDebouncedSaver(save, delay = 1500) {
     };
   }, [flush]);
 
+  // Bỏ thay đổi đang chờ lưu (vd. vừa xóa hẳn thứ đang sửa)
+  const cancel = useCallback(() => {
+    clearTimeout(timer.current);
+    timer.current = null;
+    dirty.current = false;
+  }, []);
+
   // isDirty: còn thay đổi chưa lưu hay không
   const isDirty = useCallback(() => dirty.current, []);
-  return useMemo(() => ({ schedule, flush, isDirty }), [schedule, flush, isDirty]);
+  return useMemo(() => ({ schedule, flush, cancel, isDirty }), [schedule, flush, cancel, isDirty]);
 }

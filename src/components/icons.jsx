@@ -164,6 +164,16 @@ export const HrIcon = (p) => (
     <path d="M3 12h18M8 6.5h8M8 17.5h8" />
   </Svg>
 );
+export const IndentLeftIcon = (p) => (
+  <Svg {...p}>
+    <path d="M11 6h9M11 12h9M11 18h9M7 9l-3 3 3 3" />
+  </Svg>
+);
+export const IndentRightIcon = (p) => (
+  <Svg {...p}>
+    <path d="M11 6h9M11 12h9M11 18h9M4 9l3 3-3 3" />
+  </Svg>
+);
 export const UploadIcon = (p) => (
   <Svg {...p}>
     <path d="M12 15V4M7.5 8.5L12 4l4.5 4.5M5 19h14" />

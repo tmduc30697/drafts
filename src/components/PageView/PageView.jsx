@@ -1,6 +1,6 @@
 import { useCallback, useRef, useState } from 'react';
 import { updatePage } from '../../data/pages.js';
-import { byteLength, MAX_REF_BYTES, refDisplayName, saveReference } from '../../data/references.js';
+import { byteLength, MAX_REF_BYTES, refDisplayName, removeReference, saveReference } from '../../data/references.js';
 import { useReference } from '../../hooks/useReference.js';
 import { useDebouncedSaver } from '../../hooks/useDebouncedSaver.js';
 import { loadJSON, saveJSON } from '../../lib/storage.js';
@@ -61,6 +61,15 @@ export default function PageView({ uid, page, displayTitle }) {
     refSaver.schedule();
   };
 
+  // Gỡ tài liệu khỏi trang (xóa hẳn, không có thùng rác nên hỏi lại); ghi chú của trang giữ nguyên
+  const deleteReference = () => {
+    if (!window.confirm(`Xóa tài liệu "${refDisplayName(ref.name)}"? Tài liệu sẽ bị xóa vĩnh viễn, ghi chú vẫn giữ nguyên.`)) return;
+    refSaver.cancel(); // không để lần lưu đang chờ ghi lại tài liệu vừa xóa
+    refText.current = null;
+    setFold(null);
+    removeReference(uid, page.id);
+  };
+
   // Kéo thanh chia để đổi độ rộng hai cột
   const startDrag = (e) => {
     const area = e.currentTarget.parentElement;
@@ -93,6 +102,7 @@ export default function PageView({ uid, page, displayTitle }) {
               text={ref.text}
               locked={locked}
               onReplace={() => setImporting(true)}
+              onDelete={deleteReference}
               onQuote={(text) => view && insertQuote(view, text)}
               onChange={onRefChange}
               isSaving={refSaver.isDirty}

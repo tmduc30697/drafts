@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { EditorState, Transaction } from '@codemirror/state';
 import { Decoration, EditorView, ViewPlugin } from '@codemirror/view';
-import { DocIcon, DownloadIcon, EditIcon, QuoteIcon } from '../icons.jsx';
+import { CloseIcon, DocIcon, DownloadIcon, EditIcon, QuoteIcon } from '../icons.jsx';
 import { downloadText } from '../../lib/download.js';
 import { editorExtensions, setLocked } from './editor/setup.js';
 import Toolbar from './Toolbar.jsx';
@@ -34,7 +34,7 @@ const headings = ViewPlugin.fromClass(
 
 // Cột trái: tài liệu markdown được import. Mặc định chỉ đọc; bấm bút ở đầu cột để bật chế độ sửa (có thanh định dạng).
 // Dùng cùng trình soạn thảo với phần ghi chú nên lề số hàng, định dạng và chiều cao dòng giống hệt bên phải.
-export default function ReferencePane({ name, text, locked, onReplace, onQuote, onFoldDoc, onChange, isSaving }) {
+export default function ReferencePane({ name, text, locked, onReplace, onDelete, onQuote, onFoldDoc, onChange, isSaving }) {
   const host = useRef(null);
   const viewRef = useRef(null);
   const [view, setView] = useState(null);
@@ -178,6 +178,9 @@ export default function ReferencePane({ name, text, locked, onReplace, onQuote, 
         </button>
         <button className="icon-btn small" title="Thay bằng tài liệu khác" aria-label="Thay tài liệu" disabled={locked} onClick={onReplace}>
           <DocIcon size={15} />
+        </button>
+        <button className="icon-btn small" title={locked ? 'Trang đã khóa' : 'Xóa tài liệu'} aria-label="Xóa tài liệu" disabled={locked} onClick={onDelete}>
+          <CloseIcon size={15} />
         </button>
       </header>
       {canEdit && <Toolbar view={view} compact />}

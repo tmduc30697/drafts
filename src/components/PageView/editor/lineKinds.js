@@ -1,4 +1,5 @@
 import { syntaxTree } from '@codemirror/language';
+import { isMermaidFence } from './codeBlocks.js';
 
 
 // Đổi kiểu cho các dòng đang chọn: tiêu đề, danh sách gạch đầu dòng, danh sách số, việc cần làm, trích dẫn.
@@ -66,7 +67,7 @@ function codeBlockAt(state, pos) {
     if (n.name !== 'FencedCode') continue;
     const first = state.doc.lineAt(n.from);
     const last = state.doc.lineAt(n.to);
-    if (/^\s*(`{3,}|~{3,})\s*mermaid\s*$/i.test(first.text)) return null;
+    if (isMermaidFence(first.text)) return null;
     const closed = last.number > first.number && /^\s*(`{3,}|~{3,})\s*$/.test(last.text);
     return { first, last, closed };
   }

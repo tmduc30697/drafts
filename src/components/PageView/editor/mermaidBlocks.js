@@ -5,14 +5,14 @@ import { renderMermaid } from './mermaid.js';
 import { openMermaidDialog } from './mermaidDialog.js';
 import { EditIcon, CloseIcon } from './editorIcons.js';
 import { selectBlock } from './blockSelect.js';
+import { isMermaidFence, parseFence } from './codeBlocks.js';
 
 // Khối ```mermaid ... ``` (đã đóng) được thay bằng sơ đồ đã render.
 // Bấm vào sơ đồ hoặc nút Sửa để mở popup sửa code; nút Xóa để bỏ cả khối.
 
-const OPEN = /^\s*(`{3,}|~{3,})\s*mermaid\s*$/i;
 const CLOSE = /^\s*(`{3,}|~{3,})\s*$/;
 
-// Tìm các khối mermaid hoàn chỉnh trong văn bản: [{ from, to, code }]
+// Tìm các khối mermaid hoàn chỉnh trong văn bản: [{ from, to, code, indent }]
 function findMermaidBlocks(state) {
   const { doc } = state;
   const blocks = [];
@@ -21,9 +21,9 @@ function findMermaidBlocks(state) {
       if (node.name !== 'FencedCode') return;
       const first = doc.lineAt(node.from);
       const last = doc.lineAt(node.to);
-      if (OPEN.test(first.text) && last.number > first.number && CLOSE.test(last.text)) {
+      if (isMermaidFence(first.text) && last.number > first.number && CLOSE.test(last.text)) {
         const code = first.number + 1 < last.number ? doc.sliceString(doc.line(first.number + 1).from, doc.line(last.number - 1).to) : '';
-        blocks.push({ from: first.from, to: last.to, code });
+        blocks.push({ from: first.from, to: last.to, code, indent: parseFence(first.text).indent });
       }
       return false;
     },
@@ -52,13 +52,14 @@ function toolButton(label, icon, onClick) {
 }
 
 class MermaidWidget extends WidgetType {
-  constructor(code) {
+  constructor(code, indent) {
     super();
     this.code = code;
+    this.indent = indent;
   }
 
   eq(other) {
-    return other.code === this.code;
+    return other.code === this.code && other.indent === this.indent;
   }
 
   get estimatedHeight() {
@@ -68,6 +69,7 @@ class MermaidWidget extends WidgetType {
   toDOM(view) {
     const wrap = document.createElement('div');
     wrap.className = 'cm-mermaid';
+    if (this.indent) wrap.style.setProperty('--indent', this.indent);
 
     const edit = () => {
       const block = blockAt(view.state, view.posAtDOM(wrap));
@@ -82,7 +84,9 @@ class MermaidWidget extends WidgetType {
           // Vị trí có thể đã đổi trong lúc mở popup (vd. đồng bộ từ máy khác): tìm lại
           const current = blockAt(view.state, Math.min(block.from, view.state.doc.length));
           if (!current) return;
-          view.dispatch({ changes: { from: current.from, to: current.to, insert: '```mermaid\n' + code + '\n```' } });
+          // Giữ nguyên dòng mở (```mermaid kèm thụt lề nếu có)
+          const open = view.state.doc.lineAt(current.from).text;
+          view.dispatch({ changes: { from: current.from, to: current.to, insert: open + '\n' + code + '\n```' } });
         },
         onClose: () => view.focus(),
       });
@@ -151,7 +155,7 @@ class MermaidWidget extends WidgetType {
 
 function buildDecorations(state) {
   const ranges = findMermaidBlocks(state).map((b) =>
-    Decoration.replace({ widget: new MermaidWidget(b.code), block: true }).range(b.from, b.to),
+    Decoration.replace({ widget: new MermaidWidget(b.code, b.indent), block: true }).range(b.from, b.to),
   );
   return Decoration.set(ranges);
 }

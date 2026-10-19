@@ -17,6 +17,7 @@ import { blockStyles } from './blockStyles.js';
 import { format, hiddenInline } from './format.js';
 import { hiddenLinks, links } from './links.js';
 import { renumberLists } from './renumberLists.js';
+import { indentKeymap } from './indent.js';
 
 // Enter ở dòng "- ..." / "1. ..." tự thêm "- " / số tiếp theo; dòng gạch đầu dòng trống thì thoát danh sách.
 // Không tự chèn dòng trống giữa các mục (giữ danh sách liền nhau như Notepad).
@@ -25,8 +26,27 @@ const markupContinue = insertNewlineContinueMarkupCommand({ nonTightLists: false
 // markdown coi đó là phần nối tiếp của trích dẫn)
 const LIST_LINE = /^\s*(?:[-*+]|\d+[.)])\s/;
 const continueList = (view) => {
-  const line = view.state.doc.lineAt(view.state.selection.main.head);
-  return LIST_LINE.test(line.text) && markupContinue(view);
+  const { state } = view;
+  const line = state.doc.lineAt(state.selection.main.head);
+  if (!LIST_LINE.test(line.text)) return false;
+  let tr = null;
+  if (!markupContinue({ state, dispatch: (t) => (tr = t) })) return false;
+  // Danh sách "lỏng" (có dòng trống giữa các mục, vd. ngăn cách hai nhóm) thì thư viện luôn chèn thêm một dòng trống
+  // trước mục mới; bỏ dòng trống đó để mục mới nằm ngay dưới mục đang gõ
+  let removed = 0;
+  const changes = [];
+  tr.changes.iterChanges((fromA, toA, _fromB, _toB, text) => {
+    let insert = text.toString();
+    const blank = /^\n[ \t>]*\n/.exec(insert);
+    if (blank) {
+      insert = insert.slice(blank[0].length - 1);
+      removed += blank[0].length - 1;
+    }
+    changes.push({ from: fromA, to: toA, insert });
+  });
+  if (!removed || state.selection.ranges.length > 1) view.dispatch(tr);
+  else view.dispatch({ changes, selection: { anchor: tr.selection.main.head - removed }, scrollIntoView: true, userEvent: 'input' });
+  return true;
 };
 
 // Enter ở dòng "- [ ] ...": thêm việc mới; dòng không có nội dung thì thoát kiểu đó. (Trích dẫn "> " không tự tiếp tục.)
@@ -154,6 +174,8 @@ const listKeymap = keymap.of([
   { key: 'Enter', run: (view) => continueBlock(view) || continueList(view) || insertNewlineAndIndent(view) },
   { key: 'Backspace', run: (view) => backspaceOverHidden(view) || deleteMarkupBackward(view) },
   { key: 'Delete', run: deleteOverHidden },
+  // Thụt lề (khối code / Mermaid dịch cả khối), trước indentWithTab và ⌘] ⌘[ mặc định
+  ...indentKeymap,
 ]);
 
 // Chỉ tô màu cú pháp bên trong khối code. Phần văn bản markdown (tiêu đề, in đậm...)

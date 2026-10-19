@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react';
 import { toggleWrap } from './editor/format.js';
 import { activeKind, applyKind, insertCodeBlock, insertHorizontalRule, KINDS } from './editor/lineKinds.js';
-import { BulletListIcon, CodeBlockIcon, DocIcon, DownloadIcon, HrIcon, InlineCodeIcon, LockIcon, MermaidIcon, NumberedListIcon, QuoteIcon, TableIcon, TodoListIcon, UnlockIcon } from '../icons.jsx';
+import { indentLeft, indentRight } from './editor/indent.js';
+import { BulletListIcon, CodeBlockIcon, DocIcon, DownloadIcon, HrIcon, IndentLeftIcon, IndentRightIcon, InlineCodeIcon, LockIcon, MermaidIcon, NumberedListIcon, QuoteIcon, TableIcon, TodoListIcon, UnlockIcon } from '../icons.jsx';
 import { insertMermaidBlock } from './editor/mermaidBlocks.js';
 import { openMermaidDialog } from './editor/mermaidDialog.js';
 import { insertTable } from './editor/tables.js';
@@ -15,7 +16,7 @@ const ALT = isMac ? '⌥' : 'Alt+';
 const kind = (id) => KINDS.find((k) => k.id === id);
 
 // Thanh công cụ định dạng phía trên trang (kiểu Slack):
-// H1 H2 H3 | B I U S | danh sách số, gạch đầu dòng, việc cần làm | trích dẫn, đường kẻ, bảng | code, khối code, Mermaid
+// H1 H2 H3 | B I U S | danh sách số, gạch đầu dòng, việc cần làm, thụt lề trái / phải | trích dẫn, đường kẻ, bảng | code, khối code, Mermaid
 // Tên file tải về: lấy từ tên trang, bỏ ký tự không hợp lệ trong tên file
 const fileName = (title) => `${(title || 'Không có tiêu đề').replace(/[\\/:*?"<>|\n\r]+/g, ' ').trim().slice(0, 100) || 'Drafts'}.md`;
 
@@ -129,6 +130,12 @@ export default function Toolbar({ view, title, locked, hasRef, onImport, onToggl
       </Btn>
       <Btn label="Việc cần làm" active={active === 'todo'} onClick={line('todo')}>
         <TodoListIcon size={17} />
+      </Btn>
+      <Btn label={`Thụt lề trái (${MOD}[ hoặc ${SHIFT}Tab)`} onClick={run(indentLeft)}>
+        <IndentLeftIcon size={17} />
+      </Btn>
+      <Btn label={`Thụt lề phải (${MOD}] hoặc Tab)`} onClick={run(indentRight)}>
+        <IndentRightIcon size={17} />
       </Btn>
       <span className="doc-toolbar-sep" />
       <Btn label="Trích dẫn" active={active === 'quote'} onClick={line('quote')}>
